@@ -17,11 +17,9 @@ $docker_context\
 [\\$ ](fg:#33658A)\
 """
 # $time\
-
 # [ ](fg:#33658A)\
 command_timeout = 5000
-# Disable the blank line at the start of the prompt
-# add_newline = false
+add_newline = false
 
 # You can also replace your username with a neat symbol like  to save some space
 [username]
@@ -89,4 +87,18 @@ format = '[ $time\$ ]($style)'
 # format = '[\[$symbol$common_meaning$signal_name$maybe_int\]]($style) '
 # map_symbol = true
 # disabled = false
+# time_format = "%R" # Hour:Minute Format
+# style = "fg:#33658A"
+# format = '[ $time\$ ]($style)'
+# # ~/.config/starship.toml
 #
+# # [status]
+# # style = 'bg:blue'
+# # symbol = ''
+# # not_found_symbol = ''
+# # not_executable = ''
+# # signal_symbol = ''
+# # format = '[\[$symbol$common_meaning$signal_name$maybe_int\]]($style) '
+# # map_symbol = true
+# # disabled = false
+# #
