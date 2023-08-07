@@ -1,0 +1,29 @@
+#!/bin/bash
+
+files=$(grep -l -I "$@")
+
+for val in "$@"; do
+    if [[ $val == -* ]] ; then
+        continue
+    fi
+    # re='^[0-9]+$'
+    # if [[ $val =~ $re ]] ; then
+    #     continue
+    # fi
+    pattern=$val
+    break
+done
+
+file_list=$(echo $files | tr "\n" " " | xargs)
+echo "nvim -c \"/$pattern\" $file_list"
+
+if [ -n "$files" ]; then
+    echo "found matches in"
+    echo "---"
+    echo "$files"
+    echo "---"
+    read -p "Press enter to open files in vim "
+    nvim -c "/$pattern" $file_list
+else
+    echo "Pattern not found"
+fi
