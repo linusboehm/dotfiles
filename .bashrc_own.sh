@@ -84,3 +84,5 @@ export CXX=/usr/local/bin/g++
 # source <(kubectl completion bash)
 # . "$HOME/.cargo/env"
 alias dotf='/usr/bin/git --git-dir=/Users/linus/repos/dotfiles/ --work-tree=/Users/linus'
+
+eval "$(starship init bash)"
