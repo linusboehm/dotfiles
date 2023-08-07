@@ -29,6 +29,7 @@ mkdir -p $HOME/repos
 cd
 git clone --bare git@github.com:LMBoehm/dotfiles.git $HOME/repos/dotfiles
 alias dotf='/usr/bin/git --git-dir=$HOME/repos/dotfiles/ --work-tree=$HOME'  # create alias to mng dotfiles
+dotf config status.showUntrackedFiles no
 dotf checkout
 if [ $? = 0 ]; then
     echo "checked out dotfiles";
@@ -38,6 +39,6 @@ else
     dotf checkout 2>&1 | egrep "\s+\." | awk {'print $1'} | xargs -I{} mv {} .config-backup/{}
 fi;
 dotf checkout
-dotf config status.showUntrackedFiles no
+echo "source $HOME/.bashrc_own" >> $HOME/.bashrc
 cd
 ```
