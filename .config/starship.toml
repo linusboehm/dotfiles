@@ -43,18 +43,18 @@ truncation_symbol = "…/"
 
 [c]
 symbol = " "
-style = "bg:#86BBD8"
-format = '[ $symbol ($version) ]($style)'
+# style = "bg:#86BBD8"
+format = '[ ($version) ]($style)'
 
 [docker_context]
 symbol = " "
-style = "bg:#06969A"
-format = '[ $symbol $context ]($style) $path'
+# style = "bg:#06969A"
+format = '[ $context ]($style) $path'
 
 [python]
 # symbol = " "
-style = "bg:#86BBD8"
-format = '[ $symbol ($version) ]($style)'
+# style = "bg:#86BBD8"
+format = '[ ($version) ]($style)'
 
 [git_branch]
 symbol = ""
@@ -68,8 +68,8 @@ format = '[$all_status$ahead_behind\]]($style)'
 
 [rust]
 # symbol = ""
-style = "bg:#86BBD8"
-format = '[ $symbol ($version) ]($style)'
+# style = "bg:#86BBD8"
+format = '[ ($version) ]($style)'
 
 [time]
 disabled = false
