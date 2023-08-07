@@ -36,7 +36,7 @@ if [ $? = 0 ]; then
 else
     mkdir -p .config_backup
     echo "Backing up previous dotfiles";
-    dotf checkout 2>&1 | egrep "\s+\." | awk {'print $1'} | xargs -I{} mv {} .config-backup/{}
+    dotf checkout 2>&1 | egrep "\s+\." | awk {'print $1'} | xargs -I{} mv {} .config_backup/{}
 fi;
 dotf checkout
 echo "source $HOME/.bashrc_own" >> $HOME/.bashrc
