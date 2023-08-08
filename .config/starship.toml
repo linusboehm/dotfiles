@@ -10,12 +10,12 @@ $hostname\
 $directory\
 $git_branch\
 $git_status\
-$c\
-$python\
-$rust\
 $docker_context\
 [\\$ ](fg:#33658A)\
 """
+# $c\
+# $python\
+# $rust\
 # $time\
 # [ ](fg:#33658A)\
 command_timeout = 5000
@@ -27,12 +27,13 @@ show_always = true
 # style_user = "bold fg:cyan bg:#3B4252"
 style_user = "bold fg:cyan"
 style_root = "bg:#3B4252"
-format = '[$user@]($style)'
+format = '[$user]($style)'
 
 [hostname]
 style = "bold fg:yellow"
 # style = "bold fg:cyan bg:#3B4252"
-format = '[$hostname:]($style)'
+format = '[@$hostname:]($style)'
+ssh_only = false
 
 [directory]
 # style = "fg:#86BBD8"
