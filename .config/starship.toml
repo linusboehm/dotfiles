@@ -9,6 +9,8 @@ $username\
 $hostname\
 $directory\
 $git_branch\
+$git_state\
+$git_metrics\
 $git_status\
 $docker_context\
 [\\$ ](fg:#33658A)\
@@ -63,9 +65,37 @@ style = "fg:#8ae2bf"
 format = '[ \[$branch]($style)'
 # format = '[ \[$symbol$branch ]($style)'
 
+[git_state]
+style = "fg:#8ae2bf"
+rebase ='REBASE'
+merge ='MERGE'
+revert ='REVERTE'
+cherry_pick = 'CHERRY-PICK'
+bisect = 'BISECT'
+am = 'AM'
+am_or_rebase = 'AM/REBASE'
+format = '[ \[$state( $progress_current/$progress_total)]($style)'
+# format = '[ \[$symbol$branch ]($style)'
+
+[git_metrics]
+# only_nonzero_diffs = false
+disabled = false
+# deleted_style = 'bold #ad143f'
+deleted_style = '#e28a8d'
+# added_style = 'bold #359a3d'
+added_style = '#8ae2a8'
+format = '(\([$added]($added_style)[$deleted]($deleted_style)\))'
+# format = '(\([+$added]($added_style)[-$deleted]($deleted_style)\))'
+# style = "fg:#8ae2bf"
+# format = '[ \[$state( $progress_current/$progress_total)]($style) '
+# format = '[ \[$symbol$branch ]($style)'
+
 [git_status]
 style = "fg:#8ae2bf"
-format = '[$all_status$ahead_behind\]]($style)'
+# format = '[$conflicted$deleted$renamed$modified$staged$ahead_behind\]]($style)'
+format = '[$conflicted$deleted$renamed$staged$ahead_behind\]]($style)'
+conflicted = '󱐋'
+# modified = ''
 
 [rust]
 # symbol = ""
