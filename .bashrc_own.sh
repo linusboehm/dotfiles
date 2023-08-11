@@ -59,7 +59,7 @@ alias ...="cd ../.."
 # alias tshark='tshark --color'
 # alias gdb=/opt/rh/devtoolset-7/root/usr/bin/gdb
 
-export CXX=/usr/local/bin/g++
+# export CXX=/usr/local/bin/g++
 
 # ## clang format
 # function format {
