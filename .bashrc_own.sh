@@ -2,6 +2,9 @@
 HISTSIZE=40000
 HISTFILESIZE=40000
 
+alias ls='ls -G'
+alias ll='ls -lF'
+
 # Source global definitions
 if [ -f /etc/bashrc ]; then
 	. /etc/bashrc
