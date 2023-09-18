@@ -27,12 +27,12 @@ add_newline = false
 [username]
 show_always = true
 # style_user = "bold fg:cyan bg:#3B4252"
-style_user = "bold fg:cyan"
+style_user = "fg:cyan"
 style_root = "bg:#3B4252"
 format = '[$user]($style)'
 
 [hostname]
-style = "bold fg:yellow"
+style = "fg:yellow"
 # style = "bold fg:cyan bg:#3B4252"
 format = '[@$hostname:]($style)'
 ssh_only = false
