@@ -13,10 +13,10 @@ $git_state\
 $git_metrics\
 $git_status\
 $docker_context\
+$python\
 [\\$ ](fg:#618bed)\
 """
 # $c\
-# $python\
 # $rust\
 # $time\
 # [ ](fg:#33658A)\
@@ -55,9 +55,9 @@ symbol = " "
 format = '[ $context ]($style) $path'
 
 [python]
-# symbol = " "
-# style = "bg:#86BBD8"
-format = '[ ($version) ]($style)'
+symbol = ""
+style = "fg:#86BBD8"
+format = '[(\($symbol$virtualenv\))]($style)'
 
 [git_branch]
 symbol = ""
