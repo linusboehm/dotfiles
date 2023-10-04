@@ -6,16 +6,21 @@ alias ls='ls -G'
 alias ll='ls -lF'
 
 # Source global definitions
-if [ -f /etc/bashrc ]; then
-	. /etc/bashrc
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    eval "$(starship init zsh)"
+else
+	if [ -f /etc/bashrc ]; then
+		. /etc/bashrc
+	fi
+    eval "$(starship init bash)"
 fi
 
 if [[ "$OSTYPE" == "darwin"* ]]; then
-    # Mac OSX: no leak sanatizer
+	# Mac OSX: no leak sanatizer
 	function cr() {
 		g++ -Wall \
-            -Werror \
-            -Wextra \
+			-Werror \
+			-Wextra \
 			-std=c++20 \
 			-O1 \
 			-fsanitize=address \
@@ -28,8 +33,8 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
 else
 	function cr() {
 		g++ -Wall \
-            -Werror \
-            -Wextra \
+			-Werror \
+			-Wextra \
 			-std=c++20 \
 			-O1 \
 			-fsanitize=leak \
@@ -89,4 +94,3 @@ alias ...="cd ../.."
 
 alias dotf='/usr/bin/git --git-dir=$HOME/repos/dotfiles/ --work-tree=$HOME'
 
-eval "$(starship init bash)"

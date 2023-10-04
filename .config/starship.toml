@@ -5,6 +5,7 @@
 # [](fg:#86BBD8 bg:#06969A)\
 # [](fg:#06969A bg:#33658A)\
 format = """
+$time\
 $username\
 $hostname\
 $directory\
@@ -18,7 +19,6 @@ $python\
 """
 # $c\
 # $rust\
-# $time\
 # [ ](fg:#33658A)\
 command_timeout = 5000
 add_newline = false
@@ -106,7 +106,7 @@ format = '[ ($version) ]($style)'
 disabled = false
 time_format = "%R" # Hour:Minute Format
 style = "fg:#33658A"
-format = '[ $time\$ ]($style)'
+format = '[\[$time\]]($style)'
 # ~/.config/starship.toml
 
 # [status]
