@@ -1,6 +1,11 @@
 #!/bin/bash
 
-files=$(grep -l -I "$@")
+if type "$re" > /dev/null; then
+    files=$(grep -l -I "$@")
+else
+    echo "using re"
+    files=$(rg -l "$@")
+fi
 
 for val in "$@"; do
     if [[ $val == -* ]] ; then
