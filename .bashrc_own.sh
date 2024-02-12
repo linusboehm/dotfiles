@@ -2,8 +2,41 @@
 HISTSIZE=40000
 HISTFILESIZE=40000
 
-alias ls='ls -G'
-alias ll='ls -lF'
+# PATH=/opt/rh/llvm-toolset-7/root/bin:$PATH
+# PATH=/usr/include/linux:$PATH
+# PATH=/usr/include:$PATH
+PATH=$PATH:$HOME/local/bin
+PATH=$PATH:$HOME/.local/bin
+
+alias ls='ls -G --color --group-directories-first'
+alias ll='ls -lF --color --group-directories-first'
+
+function nbranch() {
+	if [ -z "$1" ]; then
+		echo "No argument supplied"
+	else
+		git checkout -b "$USER/$1"
+		git push --set-upstream origin "$USER/$1"
+	fi
+}
+alias resurrect="tmux new-session -d && tmux run-shell ~/.config/tmux/plugins/tmux-resurrect/scripts/restore.sh && tmux kill-session -t 0"
+function ta() {
+	if [ -z "$1" ]; then
+		tmux a -d -t main
+	else
+		tmux a -d -t $1
+	fi
+}
+function tn() {
+	if [ -z "$1" ]; then
+		tmux new -s main
+	else
+		tmux new -s $1
+	fi
+}
+function tl() {
+	tmux ls
+}
 
 # Source global definitions
 if [[ "$OSTYPE" == "darwin"* ]]; then
@@ -50,10 +83,6 @@ fi
 # Uncomment the following line if you don't like systemctl's auto-paging feature:
 # export SYSTEMD_PAGER=
 
-# PATH=/opt/rh/llvm-toolset-7/root/bin:$PATH
-# PATH=/usr/include/linux:$PATH
-# PATH=/usr/include:$PATH
-PATH=$PATH:$HOME/local/bin
 
 # User specific aliases and functions
 alias cmake="cmake3"
@@ -94,3 +123,8 @@ alias ...="cd ../.."
 
 alias dotf='/usr/bin/git --git-dir=$HOME/repos/dotfiles/ --work-tree=$HOME'
 
+# history
+export PROMPT_COMMAND="history -a; $PROMPT_COMMAND"
+# history -c
+# history -r
+alias hget='history -c; history -r'

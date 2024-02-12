@@ -4,6 +4,8 @@
 # [](fg:#4C566A bg:#86BBD8)\
 # [](fg:#86BBD8 bg:#06969A)\
 # [](fg:#06969A bg:#33658A)\
+# $git_metrics\
+# $git_status\
 format = """
 $time\
 $username\
@@ -11,8 +13,6 @@ $hostname\
 $directory\
 $git_branch\
 $git_state\
-$git_metrics\
-$git_status\
 $docker_context\
 $python\
 [\\$ ](fg:#618bed)\
@@ -62,7 +62,7 @@ format = '[(\($symbol$virtualenv\))]($style)'
 [git_branch]
 symbol = ""
 style = "fg:#8ae2bf"
-format = '[ \[$branch]($style)'
+format = '[ \[$branch\]]($style)'
 # format = '[ \[$symbol$branch ]($style)'
 
 [git_state]
