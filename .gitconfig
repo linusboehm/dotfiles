@@ -2,6 +2,10 @@
 	name = Linus Boehm
 	email = linusboehm@gmail.com
 
+# improve performance for large repos (might cause some compability issues with GUI clients)
+# [feature]
+# 	manyFiles = true
+
 [init]
 	defaultBranch = main
 
@@ -28,3 +32,6 @@
 [difftool "nvimdiff"]
     # no not open in read-only mode and move to right window
     cmd = "nvim -d \"$LOCAL\" \"$REMOTE\" -c \":wincmd l\""
+    # cmd = "nvim -d --clean \"$LOCAL\" \"$REMOTE\" -c \":wincmd l\""
+    # cmd = "nvim -d --startuptime /tmp/startup \"$LOCAL\" \"$REMOTE\" -c \":wincmd l\" -c \":profile start /tmp/profile.log\" -c \":profile func *\" -c \":profile file *\" -c \":lua vim.print('started!!!')\""
+    # cmd = "/usr/bin/vimdiff /tmp/startup \"$LOCAL\" \"$REMOTE\" -c \":wincmd l\""
