@@ -10,7 +10,11 @@ PATH=$PATH:$HOME/.local/bin
 
 alias ls='ls -G --color --group-directories-first'
 alias ll='ls -lF --color --group-directories-first'
-alias gh="echo \"$(git remote -v | grep fetch | awk '{print $2}' | sed 's/git@/http:\/\//' | sed 's/com:/com\//' | sed 's/\.git//')/tree/develop/$(pwd | sed -E 's/.*repos//')\""
+
+function gh() {
+    GIT_BASE=$(git remote -v | grep fetch | awk '{print $2}' | sed 's/git@/http:\/\//' | sed 's/com:/com\//' | sed 's/\.git//')
+    echo "${GIT_BASE}/tree/develop$(pwd | sed -E 's/.*repos//')"
+}
 
 function nbranch() {
 	if [ -z "$1" ]; then
