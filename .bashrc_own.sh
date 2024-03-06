@@ -46,7 +46,9 @@ function tl() {
 # Source global definitions
 if [[ "$OSTYPE" == "darwin"* ]]; then
     eval "$(starship init zsh)"
+    source /usr/share/fzf/shell/key-bindings.zsh
 else
+    source /usr/share/fzf/shell/key-bindings.bash
 	if [ -f /etc/bashrc ]; then
 		. /etc/bashrc
 	fi
@@ -133,3 +135,5 @@ export PROMPT_COMMAND="history -a; $PROMPT_COMMAND"
 # history -c
 # history -r
 alias hget='history -c; history -r'
+
+
