@@ -24,6 +24,7 @@ function nbranch() {
 		git push --set-upstream origin "$USER/$1"
 	fi
 }
+
 alias resurrect="tmux new-session -d && tmux run-shell ~/.config/tmux/plugins/tmux-resurrect/scripts/restore.sh && tmux kill-session -t 0"
 function ta() {
 	if [ -z "$1" ]; then
@@ -32,6 +33,7 @@ function ta() {
 		tmux a -d -t $1
 	fi
 }
+
 function tn() {
 	if [ -z "$1" ]; then
 		tmux new -s main
@@ -48,7 +50,7 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
     eval "$(starship init zsh)"
     source /usr/share/fzf/shell/key-bindings.zsh
 else
-    source /usr/share/fzf/shell/key-bindings.bash
+    source ~/.fzf.bash
 	if [ -f /etc/bashrc ]; then
 		. /etc/bashrc
 	fi
@@ -136,4 +138,4 @@ export PROMPT_COMMAND="history -a; $PROMPT_COMMAND"
 # history -r
 alias hget='history -c; history -r'
 
-
+ export PATH="$PATH:/home/lboehm/.local/nvim-linux64/bin"
