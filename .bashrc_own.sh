@@ -131,6 +131,7 @@ alias ...="cd ../.."
 # . "$HOME/.cargo/env"
 
 alias dotf='/usr/bin/git --git-dir=$HOME/repos/dotfiles/ --work-tree=$HOME'
+source /usr/share/bash-completion/completions/git
 
 # history
 export PROMPT_COMMAND="history -a; $PROMPT_COMMAND"
