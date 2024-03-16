@@ -1,3 +1,6 @@
+-- logging, can be checked with <ctrl>+<shift>+L
+-- wezterm.log_warn(string.format("%s", "some message"))
+
 local wezterm = require("wezterm")
 
 -- This will hold the configuration.
@@ -32,6 +35,18 @@ config.window_background_opacity = 1.0
 config.enable_tab_bar = true
 config.hide_tab_bar_if_only_one_tab = true
 config.scrollback_lines = 10000
+local color_scheme = wezterm.color.get_builtin_schemes()[config.color_scheme]
+-- -- order for ansi and brights: 1 black, 2 red, 3 green, 4 yellow, 5 blue, 6 magenta, 7 cyan, 8 white
+--   "ansi": [ ], -- ansi: normal colors
+--   "background": -- background of terminal
+--   "brights": [ ], -- brights: bright/bold colors
+--   "cursor_bg": -- cursor color
+--   "cursor_border": -- cursor border color
+--   "cursor_fg": "#192330", -- text behind curor
+--   "foreground": "#cdcecf", -- default text color
+--   "indexed": [], -- empty
+--   "selection_bg": -- text behind selection
+--   "selection_fg": -- selection
 
 -- ----------------------------------------------------
 -- Hyperlinks
@@ -72,6 +87,27 @@ config.mouse_bindings = {
 		end),
 	},
 }
+
+wezterm.on("format-tab-title", function(tab, tabs, panes, config, hover, max_width)
+	local hostname = wezterm.hostname()
+	wezterm.log_warn(string.format("%s, %s", hostname, color_scheme["brights"][2]))
+	local title = tab.active_pane.title
+	if string.find(title, "-dev%d+:") then
+		local c = tab.is_active and "brights" or "ansi"
+		return {
+			{ Foreground = { Color = color_scheme[c][7] } },
+			{ Text = " " .. title .. " " },
+		}
+	end
+	if string.find(title, "-prod%d+:") then
+		local c = tab.is_active and "brights" or "ansi"
+		return {
+			{ Foreground = { Color = color_scheme[c][2] } },
+			{ Text = " " .. title .. " " },
+		}
+	end
+	return title
+end)
 
 if is_windows() then
 	-- ----------------------------------------------------
