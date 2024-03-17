@@ -10,6 +10,8 @@ PATH=$PATH:$HOME/.local/bin
 
 alias ls='ls -G --color --group-directories-first'
 alias ll='ls -lF --color --group-directories-first'
+alias pfzf='fzf --preview "bat --color=always {}"'
+alias vfzf='vim $(fzf --preview "bat --color=always {}")'
 
 function gh() {
     GIT_BASE=$(git remote -v | grep fetch | awk '{print $2}' | sed 's/git@/http:\/\//' | sed 's/com:/com\//' | sed 's/\.git//')
