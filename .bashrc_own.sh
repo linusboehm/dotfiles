@@ -24,13 +24,49 @@ function gh() {
     echo "${GIT_BASE}/tree/develop$(pwd | sed -E 's/.*repos//')"
 }
 
+
+# git checkout worktree
+# checks out a bare repo with 
+function gcw() {
+	if [ -z "$1" ]; then
+		echo "No argument supplied"
+        exit 0
+    fi
+    if [[ $# -eq 1 ]]; then # use repo dir name
+        REPO_DIR=$(basename "$1" .git)
+    elif [[ $# -eq 2 ]]; then # repo url and dest path supplied
+        REPO_DIR=$2
+    fi
+    echo "cloning into $REPO_DIR"
+    git clone --bare $1 $REPO_DIR && cd $REPO_DIR
+    MAIN_BRANCH=$(git remote show origin | grep 'HEAD branch' | cut -d' ' -f5) # detect name of the main remote branch (main/master/...)
+    git worktree add ${MAIN_BRANCH}
+    cd $MAIN_BRANCH
+    echo "cd to ${MAIN_BRANCH}-worktree directory.. (now in $PWD)"
+}
+
+
 function nbranch() {
 	if [ -z "$1" ]; then
 		echo "No argument supplied"
-	else
-		git checkout -b "$USER/$1"
-		git push --set-upstream origin "$USER/$1"
-	fi
+        exit 0
+    fi
+    BRANCH_NAME=$USER/$1
+
+    # check if inside a worktree (1st check) or if inside a bare repository (2nd check)
+    if [[ $(git rev-parse --git-dir) != $(git rev-parse --git-common-dir) || $(git rev-parse --is-bare-repository) == "true" ]]; then
+        BARE_DIR=$(git rev-parse --git-common-dir) # make sure the path of the new branch is always relative to the top, bare repo
+        cd $BARE_DIR
+        WT_PATH=$BARE_DIR/$1
+        echo "In bare git worktree repo... checking out $BRANCH_NAME into $WT_PATH"
+        git worktree add -b $BRANCH_NAME $WT_PATH || git worktree add $1 $BRANCH_NAME
+        cd $WT_PATH
+        git push --set-upstream origin "$USER/$1"
+    else
+        echo "In normal git repo"
+        git checkout -b "$USER/$1"
+        git push --set-upstream origin "$USER/$1"
+    fi
 }
 
 alias resurrect="tmux new-session -d && tmux run-shell ~/.config/tmux/plugins/tmux-resurrect/scripts/restore.sh && tmux kill-session -t 0"

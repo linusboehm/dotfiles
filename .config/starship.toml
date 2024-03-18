@@ -10,6 +10,7 @@ format = """
 $time\
 $username\
 $hostname\
+${custom.repo_name}\
 $directory\
 $git_branch\
 $git_state\
@@ -44,6 +45,14 @@ format = "[$path]($style)"
 truncation_length = 3
 truncation_symbol = "…/"
 
+[custom.repo_name]
+command = "echo \"$(basename $(dirname $(git rev-parse --show-toplevel)))\""
+# style = "fg:#ed567d"
+style = "fg:#b2e28a"
+when = ''' test "$(git rev-parse --git-dir)" != "$(git rev-parse --git-common-dir)" '''
+format = '[$output]($style)/'
+description = "Displays the current repository name"
+
 [c]
 symbol = " "
 # style = "bg:#86BBD8"
@@ -62,7 +71,7 @@ format = '[(\($symbol$virtualenv\))]($style)'
 [git_branch]
 symbol = ""
 style = "fg:#8ae2bf"
-format = '[ \[$branch\]]($style)'
+format = '[\[$branch\]]($style)'
 # format = '[ \[$symbol$branch ]($style)'
 
 [git_state]
