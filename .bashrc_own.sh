@@ -51,21 +51,22 @@ function nbranch() {
 		echo "No argument supplied"
         exit 0
     fi
-    BRANCH_NAME=$USER/$1
+    DESC="${1#${USER}/}"
+    BRANCH_NAME=$USER/$DESC
 
     # check if inside a worktree (1st check) or if inside a bare repository (2nd check)
     if [[ $(git rev-parse --git-dir) != $(git rev-parse --git-common-dir) || $(git rev-parse --is-bare-repository) == "true" ]]; then
         BARE_DIR=$(git rev-parse --git-common-dir) # make sure the path of the new branch is always relative to the top, bare repo
         cd $BARE_DIR
-        WT_PATH=$BARE_DIR/$1
+        WT_PATH=$BARE_DIR/$DESC
         echo "In bare git worktree repo... checking out $BRANCH_NAME into $WT_PATH"
-        git worktree add -b $BRANCH_NAME $WT_PATH || git worktree add $1 $BRANCH_NAME
+        git worktree add -b $BRANCH_NAME $WT_PATH || git worktree add $WT_PATH $BRANCH_NAME
         cd $WT_PATH
-        git push --set-upstream origin "$USER/$1"
+        git push --set-upstream origin "$BRANCH_NAME"
     else
         echo "In normal git repo"
-        git checkout -b "$USER/$1"
-        git push --set-upstream origin "$USER/$1"
+        git checkout -b "$BRANCH_NAME"
+        git push --set-upstream origin "$BRANCH_NAME"
     fi
 }
 
