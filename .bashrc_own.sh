@@ -10,8 +10,14 @@ PATH=$PATH:$HOME/.local/bin
 
 alias ls='ls -G --color --group-directories-first'
 alias ll='ls -lF --color --group-directories-first'
-alias pfzf='fzf --preview "bat --color=always {}"'
-alias vfzf='vim $(fzf --preview "bat --color=always {}")'
+
+
+# # fzf
+# alias pfzf='fzf --preview "bat --color=always {}"'
+alias fvim='vim $(fzf --preview "bat --color=always {}")'
+alias fkill='ps -ef | fzf | awk "{print $2}" | xargs kill -9'
+fcd() { cd "$(find . -type d -not -path '*/.*' | fzf)" && ls; }
+# fvim() { nvim "$(find . -type f -not -path '*/.*' | fzf --preview 'bat --color=always {}')"; }
 
 function gh() {
     GIT_BASE=$(git remote -v | grep fetch | awk '{print $2}' | sed 's/git@/http:\/\//' | sed 's/com:/com\//' | sed 's/\.git//')
@@ -99,8 +105,13 @@ fi
 alias cmake="cmake3"
 alias vim="nvim"
 alias vimdiff="nvim -d"
+
+# Dirs
 alias ..="cd .."
 alias ...="cd ../.."
+alias ....="cd ../../.."
+alias .....="cd ../../../.."
+alias ......="cd ../../../../.."
 # alias tshark='tshark --color'
 # alias gdb=/opt/rh/devtoolset-7/root/usr/bin/gdb
 
