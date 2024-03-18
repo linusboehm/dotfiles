@@ -12,12 +12,13 @@ $username\
 $hostname\
 ${custom.repo_name}\
 $directory\
-$git_branch\
+${custom.git_branch}\
 $git_state\
 $docker_context\
 $python\
 [\\$ ](fg:#618bed)\
 """
+# $git_branch\
 # $c\
 # $rust\
 # [ ](fg:#33658A)\
@@ -67,6 +68,12 @@ format = '[ $context ]($style) $path'
 symbol = ""
 style = "fg:#86BBD8"
 format = '[(\($symbol$virtualenv\))]($style)'
+
+[custom.git_branch]
+command = "git rev-parse --abbrev-ref HEAD "
+style = "fg:#8ae2bf"
+when = ''' $(git rev-parse --is-inside-work-tree) 2>/dev/null '''
+format = '[\[$output\]]($style)'
 
 [git_branch]
 symbol = ""
