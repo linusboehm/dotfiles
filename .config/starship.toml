@@ -13,6 +13,7 @@ $hostname\
 ${custom.repo_name}\
 $directory\
 ${custom.git_branch}\
+${custom.bare_repo}\
 $git_state\
 $docker_context\
 $python\
@@ -45,6 +46,14 @@ style = "fg:#b2e28a"
 format = "[$path]($style)"
 truncation_length = 3
 truncation_symbol = "…/"
+
+[custom.bare_repo]
+command = "echo BARE"
+# style = "fg:#ed567d"
+style = "fg:#8ae2bf"
+when = ''' $(git rev-parse --is-bare-repository) 2>/dev/null '''
+format = '[\[$output\]]($style)'
+description = "Displays the current repository name"
 
 [custom.repo_name]
 command = "echo \"$(basename $(dirname $(git rev-parse --show-toplevel)))\""
