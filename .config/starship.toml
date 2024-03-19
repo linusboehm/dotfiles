@@ -10,8 +10,8 @@ format = """
 $time\
 $username\
 $hostname\
-${custom.repo_name}\
 $directory\
+${custom.repo_name}\
 ${custom.git_branch}\
 ${custom.bare_repo}\
 $git_state\
@@ -57,10 +57,11 @@ description = "Displays the current repository name"
 
 [custom.repo_name]
 command = "echo \"$(basename $(dirname $(git rev-parse --show-toplevel)))\""
-# style = "fg:#ed567d"
-style = "fg:#b2e28a"
+# style = "fg:#b2e28a" # dir color
+style = "fg:#8ae2bf" # git color
 when = ''' test "$(git rev-parse --git-dir)" != "$(git rev-parse --git-common-dir)" '''
-format = '[$output]($style)/'
+# format = '[$output/]($style)' # root dir
+format = '[\[$output\]]($style)' # in brackets
 description = "Displays the current repository name"
 
 [c]
