@@ -2,15 +2,28 @@
 HISTSIZE=40000
 HISTFILESIZE=40000
 
-# PATH=/opt/rh/llvm-toolset-7/root/bin:$PATH
-# PATH=/usr/include/linux:$PATH
-# PATH=/usr/include:$PATH
-PATH=$PATH:$HOME/local/bin
 PATH=$PATH:$HOME/.local/bin
+
+alias dotf='/usr/bin/git --git-dir=$HOME/repos/dotfiles/ --work-tree=$HOME'
 
 alias ls='ls -G --color --group-directories-first'
 alias ll='ls -lF --color --group-directories-first'
 
+# User specific aliases and functions
+alias cmake="cmake3"
+alias vim="nvim"
+alias vimdiff="nvim -d"
+
+# Dirs
+alias ..="cd .."
+alias ...="cd ../.."
+alias ....="cd ../../.."
+alias .....="cd ../../../.."
+alias ......="cd ../../../../.."
+# alias tshark='tshark --color'
+# alias gdb=/opt/rh/devtoolset-7/root/usr/bin/gdb
+
+alias config='cd ~/.config/'
 
 # # fzf
 # alias pfzf='fzf --preview "bat --color=always {}"'
@@ -162,20 +175,6 @@ fi
 # export SYSTEMD_PAGER=
 
 
-# User specific aliases and functions
-alias cmake="cmake3"
-alias vim="nvim"
-alias vimdiff="nvim -d"
-
-# Dirs
-alias ..="cd .."
-alias ...="cd ../.."
-alias ....="cd ../../.."
-alias .....="cd ../../../.."
-alias ......="cd ../../../../.."
-# alias tshark='tshark --color'
-# alias gdb=/opt/rh/devtoolset-7/root/usr/bin/gdb
-
 # export CXX=/usr/local/bin/g++
 
 # ## clang format
@@ -204,7 +203,6 @@ alias ......="cd ../../../../.."
 # source <(kubectl completion bash)
 # . "$HOME/.cargo/env"
 
-alias dotf='/usr/bin/git --git-dir=$HOME/repos/dotfiles/ --work-tree=$HOME'
 source /usr/share/bash-completion/completions/git
 
 # history
