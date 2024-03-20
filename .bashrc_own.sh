@@ -59,6 +59,7 @@ function gcw() {
     MAIN_BRANCH=$(git remote show origin | grep 'HEAD branch' | cut -d' ' -f5) # detect name of the main remote branch (main/master/...)
     git worktree add ${MAIN_BRANCH}
     cd $MAIN_BRANCH
+    pre-commit install &>/dev/null || echo "pre-commit install failed"
     echo "cd to ${MAIN_BRANCH}-worktree directory.. (now in $PWD)"
 }
 
