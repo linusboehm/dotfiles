@@ -75,7 +75,6 @@ function getbranch() {
         echo "adding worktree"
         git worktree add $BRANCH_NAME || echo "already exists"
         cd $WT_PATH
-        git push --set-upstream origin "$BRANCH_NAME"
     else
         echo "branch ${BRANCH_NAME} doens't exist in origin"
     fi
