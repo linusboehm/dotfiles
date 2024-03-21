@@ -58,7 +58,7 @@ config.hyperlink_rules = wezterm.default_hyperlink_rules()
 -- make username/project paths clickable. this implies paths like the following are for github.
 -- ( "nvim-treesitter/nvim-treesitter" | `wez/wezterm` | "wez/wezterm.git" )
 table.insert(config.hyperlink_rules, {
-	regex = [[["'`]{1}([\w\d]{1}[-\w\d]+)(/){1}([-\w\d\.]+)["'`]{1}]],
+	regex = [[["'`]{1}([\w\d]{1}[-\w\d]+)(/){1}([-\w\d]+\.?(?!hp*")[-\w\d]*)["'`]{1}]],
 	format = "https://www.github.com/$1/$3",
 })
 table.insert(config.hyperlink_rules, {
