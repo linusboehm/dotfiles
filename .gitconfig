@@ -35,3 +35,6 @@
     # cmd = "nvim -d --clean \"$LOCAL\" \"$REMOTE\" -c \":wincmd l\""
     # cmd = "nvim -d --startuptime /tmp/startup \"$LOCAL\" \"$REMOTE\" -c \":wincmd l\" -c \":profile start /tmp/profile.log\" -c \":profile func *\" -c \":profile file *\" -c \":lua vim.print('started!!!')\""
     # cmd = "/usr/bin/vimdiff /tmp/startup \"$LOCAL\" \"$REMOTE\" -c \":wincmd l\""
+[merge]
+	tool = nvimdiff
+	keepBackup = false

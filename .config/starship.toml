@@ -59,7 +59,7 @@ description = "Displays the current repository name"
 command = "echo \"$(basename $(dirname $(git rev-parse --show-toplevel)))\""
 # style = "fg:#b2e28a" # dir color
 style = "fg:#8ae2bf" # git color
-when = ''' test "$(git rev-parse --git-dir)" != "$(git rev-parse --git-common-dir)" '''
+when = ''' test "$(realpath $(git rev-parse --git-dir))" != "$(realpath $(git rev-parse --git-common-dir))" '''
 # format = '[$output/]($style)' # root dir
 format = '[\[$output\]]($style)' # in brackets
 description = "Displays the current repository name"
