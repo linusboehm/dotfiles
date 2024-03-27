@@ -62,6 +62,26 @@ function gcw() {
 	echo "cd to ${MAIN_BRANCH}-worktree directory.. (now in $PWD)"
 }
 
+function renamebranch() {
+    if [ -z "$1" ]; then
+        echo "No argument supplied"
+        exit 0
+    fi
+    NEW_BRANCH_NAME=$1
+    CURR_BRANCH_NAME=$(git rev-parse --abbrev-ref HEAD)
+
+    # rename local branch
+    git branch -m $CURR_BRANCH_NAME $NEW_BRANCH_NAME
+    # delete the old branch on remote
+    git push origin :$CURR_BRANCH_NAME
+    # don't push to old remote branch
+    git branch --unset-upstream $NEW_BRANCH_NAME
+    # push new branch to remote
+    git push origin $NEW_BRANCH_NAME
+    # set upstream
+    git push origin -u $NEW_BRANCH_NAME
+}
+
 function getbranch() {
 	BRANCH_NAME=$1
 	if git ls-remote --exit-code --heads origin refs/heads/$BRANCH_NAME &>/dev/null; then
@@ -74,6 +94,7 @@ function getbranch() {
 		echo "adding worktree"
 		git worktree add $BRANCH_NAME || echo "already exists"
 		cd $WT_PATH
+    git checkout $BRANCH_NAME
 	else
 		echo "branch ${BRANCH_NAME} doens't exist in origin"
 	fi

@@ -24,6 +24,10 @@ else
 	exit 1
 fi
 
+### CARGO
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+### END CARGO
+
 ##### NPM
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
 nvm install node
