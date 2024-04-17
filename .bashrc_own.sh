@@ -53,18 +53,18 @@ function gcw() {
   fi
   echo "cloning into $REPO_DIR"
 
-  git clone --bare -- $REPO_ADDR $REPO_DIR && cd $REPO_DIR
+  git clone --bare -- "$REPO_ADDR" "$REPO_DIR" && cd "$REPO_DIR"
 
   # get name of the HEAD remote branch (main/master/...)
   MAIN_BRANCH=$(git remote show origin | grep 'HEAD branch' | cut -d' ' -f5) # detect name of the main remote branch (main/master/...)
-  git worktree add ${MAIN_BRANCH}
-  cd $MAIN_BRANCH
+  git worktree add "$MAIN_BRANCH"
+  cd "$MAIN_BRANCH"
   pre-commit install &>/dev/null || echo "pre-commit install failed"
   echo "cd to ${MAIN_BRANCH}-worktree directory.. (now in $PWD)"
 }
 
 function renamebranch() {
-  if [ -z "$1" ]; then
+  if [ "$1" = "" ]; then
     echo "No argument supplied"
     exit 0
   fi
@@ -72,15 +72,15 @@ function renamebranch() {
   CURR_BRANCH_NAME=$(git rev-parse --abbrev-ref HEAD)
 
   # rename local branch
-  git branch -m $CURR_BRANCH_NAME $NEW_BRANCH_NAME
+  git branch -m "$CURR_BRANCH_NAME" "$NEW_BRANCH_NAME"
   # delete the old branch on remote
-  git push origin :$CURR_BRANCH_NAME
+  git push origin :"$CURR_BRANCH_NAME"
   # don't push to old remote branch
-  git branch --unset-upstream $NEW_BRANCH_NAME
+  git branch --unset-upstream "$NEW_BRANCH_NAME"
   # push new branch to remote
-  git push origin $NEW_BRANCH_NAME
+  git push origin "$NEW_BRANCH_NAME"
   # set upstream
-  git push origin -u $NEW_BRANCH_NAME
+  git push origin -u "$NEW_BRANCH_NAME"
 }
 
 function confirm() {
@@ -100,14 +100,14 @@ function reviewpr() {
   BARE_DIR=$(git rev-parse --git-common-dir)
   MAIN_BRANCH=$(git remote show origin | grep 'HEAD branch' | cut -d' ' -f5)
 
-  cd $BARE_DIR
+  cd "$BARE_DIR"
   echo "removing $PR_BRANCH worktree"
-  git worktree remove --force $PR_BRANCH 2>/dev/null || echo "$PR_BRANCH worktree doesn't exist"
+  git worktree remove --force "$PR_BRANCH" 2>/dev/null || echo "$PR_BRANCH worktree doesn't exist"
   echo "removing $PR_BRANCH branch"
-  git branch -D $PR_BRANCH 2>/dev/null || echo "$PR_BRANCH branch doesn't exist"
-  git fetch origin pull/$PR_ID/head:$PR_BRANCH
-  git worktree add $PR_BRANCH $PR_BRANCH || echo "$PR_BRANCH already exists"
-  cd $PR_BRANCH
+  git branch -D "$PR_BRANCH" 2>/dev/null || echo "$PR_BRANCH branch doesn't exist"
+  git fetch origin pull/"$PR_ID/head:$PR_BRANCH"
+  git worktree add "$PR_BRANCH" "$PR_BRANCH" || echo "$PR_BRANCH already exists"
+  cd "$PR_BRANCH"
   CYAN='\033[0;36m'
   NC='\033[0m' # No Color
   # echo "Running cmake..."
@@ -115,12 +115,12 @@ function reviewpr() {
   # echo "Done"
   printf "${CYAN}Changed files:\n"
   printf "  %s\n" $(git diff --name-only $MAIN_BRANCH...)
-  printf "${NC}"
+  printf "$NC"
 
   if confirm "run pre-commit hooks"; then
     echo "runnign pre-commit hooks"
     # pre-commit run --show-diff-on-failure --files $(git diff --name-only $MAIN_BRANCH...)
-    pre-commit run --files $(git diff --name-only $MAIN_BRANCH...)
+    pre-commit run --files "$(git diff --name-only "$MAIN_BRANCH"...)"
   fi
   if confirm "open diffview"; then
     echo "runnign pre-commit hooks"
@@ -132,24 +132,24 @@ function reviewpr() {
 
 function getbranch() {
   BRANCH_NAME=$1
-  if git ls-remote --exit-code --heads origin refs/heads/$BRANCH_NAME &>/dev/null; then
+  if git ls-remote --exit-code --heads origin refs/heads/"$BRANCH_NAME" &>/dev/null; then
     BARE_DIR=$(git rev-parse --git-common-dir)
-    cd $BARE_DIR
+    cd "$BARE_DIR"
     WT_PATH=$BARE_DIR/$BRANCH_NAME
 
     echo "fetching"
     git fetch
     echo "adding worktree"
-    git worktree add $BRANCH_NAME || echo "already exists"
-    cd $WT_PATH
-    git checkout $BRANCH_NAME
+    git worktree add "$BRANCH_NAME" || echo "already exists"
+    cd "$WT_PATH"
+    git checkout "$BRANCH_NAME"
   else
     echo "branch ${BRANCH_NAME} doens't exist in origin"
   fi
 }
 
 function nbranch() {
-  if [ -z "$1" ]; then
+  if [ "$1" = "" ]; then
     echo "No argument supplied"
     exit 0
   fi
@@ -162,11 +162,11 @@ function nbranch() {
   if [[ $(git rev-parse --git-dir) != $(git rev-parse --git-common-dir) || $(git rev-parse --is-bare-repository) == "true" ]]; then
     # get directory of the root bare dir (make worktree branch relative to bare dir)
     BARE_DIR=$(git rev-parse --git-common-dir)
-    cd $BARE_DIR
+    cd "$BARE_DIR"
     WT_PATH=$BARE_DIR/$BRANCH_NAME
     echo "In bare git worktree repo... checking out $BRANCH_NAME into $WT_PATH"
-    git worktree add -b $BRANCH_NAME $WT_PATH
-    cd $WT_PATH
+    git worktree add -b "$BRANCH_NAME" "$WT_PATH"
+    cd "$WT_PATH"
     git push --set-upstream origin "$BRANCH_NAME"
   else
     echo "In normal git repo"
@@ -180,15 +180,15 @@ function ta() {
   if [ -z "$1" ]; then
     tmux a -d -t main
   else
-    tmux a -d -t $1
+    tmux a -d -t "$1"
   fi
 }
 
 function tn() {
-  if [ -z "$1" ]; then
+  if [ "$1" = "" ]; then
     tmux new -s main
   else
-    tmux new -s $1
+    tmux new -s "$1"
   fi
 }
 function tl() {
@@ -219,8 +219,8 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
       -fsanitize=undefined \
       -fno-omit-frame-pointer \
       -fno-sanitize-recover=all \
-      -o $1.out $1.cpp &&
-      ./$1.out
+      -o "$1".out "$1".cpp &&
+      ./"$1".out
   }
 else
   function cr() {
@@ -234,8 +234,8 @@ else
       -fsanitize=undefined \
       -fno-omit-frame-pointer \
       -fno-sanitize-recover=all \
-      -o $1.out $1.cpp &&
-      ./$1.out
+      -o "$1".out "$1".cpp &&
+      ./"$1".out
   }
 fi
 
