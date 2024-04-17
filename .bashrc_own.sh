@@ -1,3 +1,4 @@
+#!/bin/bash
 # .bashrc
 HISTSIZE=40000
 HISTFILESIZE=40000
@@ -25,6 +26,9 @@ alias ......="cd ../../../../.."
 # alias gdb=/opt/rh/devtoolset-7/root/usr/bin/gdb
 
 alias config='cd ~/.config/'
+alias prec='pre-commit run --files $(git diff --name-only)'
+alias precc='pre-commit run --files $(git diff --name-only HEAD^)'
+alias precpr='pre-commit run --files $(git diff --name-only master...)'
 
 # # fzf
 # alias pfzf='fzf --preview "bat --color=always {}"'
@@ -41,7 +45,7 @@ function gh() {
 # git checkout worktree
 # checks out a bare repo with
 function gcw() {
-  if [ -z "$1" ]; then
+  if [ "$1" = "" ]; then
     echo "No argument supplied"
     exit 0
   fi
@@ -53,7 +57,7 @@ function gcw() {
   fi
   echo "cloning into $REPO_DIR"
 
-  git clone --bare -- "$REPO_ADDR" "$REPO_DIR" && cd "$REPO_DIR"
+  git clone --bare -- "$REPO_ADDR" "$REPO_DIR" && cd "$REPO_DIR" || exit 1
 
   # get name of the HEAD remote branch (main/master/...)
   MAIN_BRANCH=$(git remote show origin | grep 'HEAD branch' | cut -d' ' -f5) # detect name of the main remote branch (main/master/...)
@@ -91,7 +95,7 @@ function confirm() {
 }
 
 function reviewpr() {
-  if [ -z "$1" ]; then
+  if [ "$1" = "" ]; then
     echo "No argument supplied. Please provide PR ID"
     exit 0
   fi
@@ -148,6 +152,18 @@ function getbranch() {
   fi
 }
 
+function removebranch() {
+  CURR_BRANCH_NAME=$(git rev-parse --abbrev-ref HEAD)
+  BARE_DIR=$(git rev-parse --git-common-dir)
+  cd "$BARE_DIR"
+
+  # delete the old branch on remote
+  git push origin :"$CURR_BRANCH_NAME" || echo "remote branch doesn't exists"
+  # remove worktree
+  git worktree remove --force "$CURR_BRANCH_NAME" 2>/dev/null || echo "$CURR_BRANCH_NAME worktree doesn't exist"
+  git branch -D "$CURR_BRANCH_NAME"
+}
+
 function nbranch() {
   if [ "$1" = "" ]; then
     echo "No argument supplied"
@@ -155,7 +171,7 @@ function nbranch() {
   fi
 
   INITIALS=$(git config user.name | sed "s/[a-z ]//g" | tr '[:lower:]' '[:upper:]')
-  DESC="${1#"${INITIALS}"_}"
+  DESC="${1#"${INITIALS}_"}"
   BRANCH_NAME=${INITIALS}_$DESC
 
   # check if inside a worktree (1st check) or if inside a bare repository (2nd check)
@@ -177,7 +193,7 @@ function nbranch() {
 
 alias resurrect="tmux new-session -d && tmux run-shell ~/.config/tmux/plugins/tmux-resurrect/scripts/restore.sh && tmux kill-session -t 0"
 function ta() {
-  if [ -z "$1" ]; then
+  if [ "$1" = "" ]; then
     tmux a -d -t main
   else
     tmux a -d -t "$1"
@@ -192,7 +208,7 @@ function tn() {
   fi
 }
 function tl() {
-  tmux ls
+  tmux 'ls'
 }
 
 # Source global definitions
@@ -211,12 +227,13 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
   # Mac OSX: no leak sanatizer
   function cr() {
     g++ -Wall \
+      -g \
       -Werror \
       -Wextra \
       -std=c++20 \
       -O1 \
-      -fsanitize=address \
       -fsanitize=undefined \
+      -fsanitize=address \
       -fno-omit-frame-pointer \
       -fno-sanitize-recover=all \
       -o "$1".out "$1".cpp &&
@@ -225,17 +242,19 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
 else
   function cr() {
     g++ -Wall \
+      -g \
       -Werror \
       -Wextra \
       -std=c++20 \
       -O1 \
-      -fsanitize=leak \
       -fsanitize=address \
+      -fsanitize=leak \
       -fsanitize=undefined \
-      -fno-omit-frame-pointer \
       -fno-sanitize-recover=all \
+      -fno-omit-frame-pointer \
       -o "$1".out "$1".cpp &&
       ./"$1".out
+      # -L /usr/lib/gcc/x86_64-redhat-linux/8/ \
   }
 fi
 
