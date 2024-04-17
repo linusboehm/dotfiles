@@ -114,7 +114,7 @@ function reviewpr() {
   # ./run_cmake.sh &>/dev/null || echo "ERROR RUNNING CMAKE"
   # echo "Done"
   printf "${CYAN}Changed files:\n"
-  printf "  %s\n" $(git diff --name-only $MAIN_BRANCH...)
+  printf "  %s\n" "$(git diff --name-only "$MAIN_BRANCH"...)"
   printf "$NC"
 
   if confirm "run pre-commit hooks"; then
@@ -155,7 +155,7 @@ function nbranch() {
   fi
 
   INITIALS=$(git config user.name | sed "s/[a-z ]//g" | tr '[:lower:]' '[:upper:]')
-  DESC="${1#${INITIALS}_}"
+  DESC="${1#"${INITIALS}"_}"
   BRANCH_NAME=${INITIALS}_$DESC
 
   # check if inside a worktree (1st check) or if inside a bare repository (2nd check)
@@ -200,7 +200,7 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
   eval "$(starship init zsh)"
   source /usr/share/fzf/shell/key-bindings.zsh
 else
-  source ~/.fzf.bash
+  source "$HOME/.fzf.bash"
   if [ -f /etc/bashrc ]; then
     . /etc/bashrc
   fi
