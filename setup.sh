@@ -1,147 +1,183 @@
 #!/bin/bash
 
 set -euo pipefail
-cd ~
+cd "$HOME"
 
-BIN_DIR=".local/bin"
+BIN_DIR="$HOME/.local/bin"
 
 ARCH=$(uname -m)
-OS=$(uname)
+OS=$(uname | tr '[:upper:]' '[:lower:]')
 
-mkdir -p $BIN_DIR
+mkdir -p "$BIN_DIR"
 
-if [[ "$OS" == "Linux" ]]; then
-	PLATFORM="linux"
-	if [[ "$ARCH" == "aarch64" ]]; then
-		ARCH="aarch64";
-	elif [[ $ARCH == "ppc64le" ]]; then
-		ARCH="ppc64le";
-	else
-		ARCH="64";
-	fi
-else
-	echo "Platform not supported"
-	exit 1
+if [[ "$ARCH" != "x86_64" ]]; then
+  echo "Architecture [$ARCH] not supported"
+  exit 1
 fi
 
-### CARGO
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-### END CARGO
-
-##### NPM
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
-nvm install node
-##### END NPM
-
-##### RIGREP
-if [[ ! -e "${BIN_DIR}/rg" ]]; then
-    RIGREP_VERSION=ripgrep-14.1.0-x86_64-unknown-linux-musl
-    curl -Ls "https://github.com/BurntSushi/ripgrep/releases/download/14.1.0/${RIGREP_VERSION}.tar.gz" | tar -xz ${RIGREP_VERSION}/rg
-    install ${RIGREP_VERSION}/rg $BIN_DIR
-    rm -rf ${RIGREP_VERSION}
-else
-    echo "rg already installed."
+if [[ "$OS" != "linux" ]]; then
+  echo "Platform [$OS] not supported"
+  exit 1
 fi
-##### END RIGREP
 
-##### LAZYGIT
-if [[ ! -e "${BIN_DIR}/lazygit" ]]; then
-    LAZYGIT_VERSION=$(curl -s "https://api.github.com/repos/jesseduffield/lazygit/releases/latest" | grep -Po '"tag_name": "v\K[^"]*')
-    LAZYGIT_ARCHIVE=lazygit_${LAZYGIT_VERSION}_${OS}_x86_${ARCH}.tar.gz
-    curl -Ls "https://github.com/jesseduffield/lazygit/releases/latest/download/${LAZYGIT_ARCHIVE}" | tar -xz lazygit
-    install lazygit $BIN_DIR/lazygit
-    rm lazygit
-else
-    echo "rg already installed."
-fi
-##### END LAZYGIT
+function get_latest_from_gh() {
+  REPO=${1/\/github.com/\/api.github.com/repos}
+  PATTERN=$2
+  DESC=$(basename "$REPO")
+  echo "Installing $DESC..."
+  rm -rf /tmp/setup_artifacts
+  mkdir /tmp/setup_artifacts
 
+  # LATEST=$(gh release list --repo "$REPO" --json isLatest,tagName --jq '.[] | select(.isLatest == true) | .tagName')
+  # echo "$BINARY: $LATEST"
+  # gh release view -R "$REPO"
+  # URL=$(gh release view "$LATEST" -R "$REPO" --json assets -q ".assets[] | select(.name | test(\".*$PATTERN.*.tar.gz$\")) | .url")
+  # echo "$URL: $LATEST"
+  # curl -Ls "$URL" | tar -xz -C "/tmp/setup_artifacts"
+
+  ASSETS=$(curl -s "$REPO/releases/latest" |
+    jq -r ".assets[] | select(.name | test(\"$PATTERN\")) | select(.name | test(\"sha256\") | not) | .browser_download_url")
+  MATCHES=$(echo "$ASSETS" | wc -l)
+  if [[ $MATCHES -ne 1 ]]; then
+    echo "expected 1 match for $REPO, found $MATCHES ($ASSETS)... Aborting"
+    exit 1
+  fi
+  curl -Ls "$ASSETS" |
+    tar -xz -C "/tmp/setup_artifacts"
+
+  # gh release download -R "$REPO" -D /tmp/setup_artifacts -p "$PATTERN" --clobber
+  # rm -rf /tmp/setup_artifacts/*sha256*
+  # ARCHIVE=$(ls /tmp/setup_artifacts)
+  # tar -xzf /tmp/setup_artifacts/$ARCHIVE -C /tmp/setup_artifacts || echo "couldn't extract: $REPO"
+}
+
+function install_latest_from_gh() {
+  REPO=$1
+  PATTERN=$2
+  REPO_DIR=$(basename "$REPO")
+  if [[ $# -eq 3 ]]; then
+    BINARY=$3
+  elif [[ $# -eq 2 ]]; then
+    BINARY=$REPO_DIR
+  fi
+  if [[ ! -e "${BIN_DIR}/${BINARY}" ]]; then
+    rm -rf /tmp/setup_artifacts
+    get_latest_from_gh "$REPO" "$PATTERN"
+
+    BIN_PATH=$(find /tmp/setup_artifacts -name "$BINARY")
+    echo "bin path: $BIN_PATH"
+    install "$BIN_PATH" "$BIN_DIR"
+    rm -rf /tmp/setup_artifacts
+  else
+    echo "$BINARY already installed."
+  fi
+}
+
+# ##### GH
+# ##### CURRENTLY NOT NEEDED
+# if [[ ! -e "${BIN_DIR}/gh" ]]; then
+#   VERSION=2.46.0
+#   FOLDER=gh_${VERSION}_${OS}_386
+#
+#   curl -Ls "https://github.com/cli/cli/releases/download/v${VERSION}/${FOLDER}.tar.gz" | tar -xz "$FOLDER"/bin/gh
+#   install "$FOLDER"/bin/gh "$BIN_DIR"
+#   rm -rf "$FOLDER"
+#   # gh extension install https://www.github.com/dlvhdr/gh-dash
+# else
+#   echo "gh already installed."
+# fi
+# ##### END GH
+
+install_latest_from_gh "https://github.com/BurntSushi/ripgrep" "${ARCH}-unknown-${OS}-musl.tar.gz" "rg"
+install_latest_from_gh "https://github.com/jesseduffield/lazygit" ".*Linux_${ARCH}.*"
+install_latest_from_gh "https://github.com/sharkdp/bat" ".*${ARCH}-unknown-${OS}-gnu.tar.gz"
+install_latest_from_gh "https://github.com/sharkdp/fd" ".*-${ARCH}-unknown-${OS}-musl.tar.gz"
+
+# ########################
 #### NEOVIM
-if [[ ! -e ".local/nvim-linux64" ]]; then
-    NVIM_ARCHIVE=nvim-${PLATFORM}${ARCH}.tar.gz
-    URL=https://github.com/neovim/neovim/releases/latest/download/$NVIM_ARCHIVE
-    echo "getting nvim from: $URL"
-    curl -Ls $URL | tar -C ~/.local -xz
+# NPM required for some linters in nvim
+if [[ ! -d "$HOME/.nvm" ]]; then
+  curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+  export NVM_DIR="$HOME/.nvm"
+  [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"                   # This loads nvm
+  [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion" # This loads nvm bash_completion
+  nvm install node
 else
-    echo "nvim already installed."
+  echo "nvm already installed."
 fi
-#### END NEOVIM
+
+if [[ ! -e ".local/nvim-linux64" ]]; then
+  get_latest_from_gh "https://github.com/neovim/neovim" ".*nvim-${OS}64.tar.gz$" "nvim"
+  mv /tmp/setup_artifacts/nvim-linux64 "$HOME/.local/"
+  rm -rf /tmp/setup_artifacts
+else
+  echo "nvim already installed."
+fi
 
 ## CONFIG
-if [[ ! -d "~/.config/nvim" ]]; then
-    mkdir -p ~/.config
-    cd ~/.config
-    git clone git@github.com:linusboehm/neovim.git nvim || echo "nvim config already downloaded"
-    cd ~
+if [[ ! -d "$HOME/.config/nvim" ]]; then
+  mkdir -p "$HOME/.config"
+  git clone git@github.com:linusboehm/lazyvim.git ~/.config/nvim || echo "nvim config already downloaded"
+  cd ~
 else
-    echo "nvim config already downloaded."
+  echo "nvim config already installed."
 fi
-###### END NEOVIM
 
+# ########################
 #### STARSHIP
 if [[ ! -e ".local/bin/starship" ]]; then
-    curl -sS https://starship.rs/install.sh | sh -s -- -y -b $BIN_DIR
+  curl -sS https://starship.rs/install.sh | sh -s -- -y -b "$BIN_DIR"
 else
-    echo "starship already downloaded."
+  echo "starship already installed."
 fi
-#### END STARSHIP
 
+# ########################
 #### DOTFILES
 if [[ ! -d "repos/dotfiles" ]]; then
-    shopt -s expand_aliases
-    mkdir -p $HOME/repos
-    git clone --bare git@github.com:LMBoehm/dotfiles.git $HOME/repos/dotfiles || echo "already downloaded repo"
-    alias dotf='/usr/bin/git --git-dir=$HOME/repos/dotfiles/ --work-tree=$HOME'  # create alias to mng dotfiles
-    dotf config status.showUntrackedFiles no
-    dotf checkout
-    if [ $? = 0 ]; then
-        echo "checked out dotfiles";
-    else
-        mkdir -p .config_backup
-        echo "Backing up previous dotfiles";
-        dotf checkout 2>&1 | egrep "\s+\." | awk {'print $1'} | xargs -I{} mv {} .config_backup/{}
-    fi;
-    dotf checkout
-    echo "source $HOME/.bashrc_own.sh" >> $HOME/.bashrc
-    cd
+  shopt -s expand_aliases
+  mkdir -p "$HOME/repos"
+  git clone --bare git@github.com:linusboehm/dotfiles.git "$HOME/repos/dotfiles" || echo "already downloaded repo"
+  function dotf() {
+    /usr/bin/git "--git-dir=$HOME/repos/dotfiles/ --work-tree=$HOME $*" # create alias to mng dotfiles
+  }
+  dotf config status.showUntrackedFiles no
+  set +e
+  dotf checkout
+  RET_CODE=$?
+  set -e
+  if [ "$RET_CODE" = 0 ]; then
+    echo "checked out dotfiles"
+  else
+    mkdir -p .config_backup
+    echo "Backing up previous dotfiles"
+    dotf checkout 2>&1 | grep -E "\s+\." | awk {'print $1'} | xargs -I{} mv {} .config_backup/{}
+  fi
+  dotf checkout
+  echo "source $HOME/.bashrc_own.sh" >>"$HOME"/.bashrc
+  cd
 else
-    echo "dotfiles already downloaded."
+  echo "dotfiles already installed."
 fi
-#### END DOTFILES
 
+# ########################
 ### FZF
-git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf
-~/.fzf/install
-### END FZF
+if [[ ! -e ".fzf/bin/fzf" ]]; then
+  git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf
+  ~/.fzf/install
+else
+  echo "fzf already installed."
+fi
 
+# ########################
 ### TMUX PLUGINS
-git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
-### END TMUX PLUGINS
-
-##### BAT
-if [[ ! -e "${BIN_DIR}/bat" ]]; then
-    BAT_VERSION=v0.24.0
-    BAT_FOLDER=bat-${BAT_VERSION}-x86_64-unknown-linux-gnu
-
-    curl -Ls "https://github.com/sharkdp/bat/releases/download/${BAT_VERSION}/${BAT_FOLDER}.tar.gz" | tar -xz ${BAT_FOLDER}/bat
-    install $BAT_FOLDER/bat $BIN_DIR
-    rm -rf $BAT_FOLDER
-
+if [[ ! -d ".tmux/plugins/tpm" ]]; then
+  git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
 else
-    echo "bat already installed."
+  echo "tpm already installed."
 fi
-##### END BAT
 
-##### FD
-if [[ ! -e "${BIN_DIR}/fd" ]]; then
-    FD_VERSION=v9.0.0
-    FD_FOLDER=fd-${FD_VERSION}-x86_64-unknown-linux-musl
-    
-    # wget "https://github.com/sharkdp/fd/releases/download/${FD_VERSION}/${FD_FOLDER}.tar.gz"
-    curl -Ls "https://github.com/sharkdp/fd/releases/download/${FD_VERSION}/${FD_FOLDER}.tar.gz" | tar -xz ${FD_FOLDER}/fd
-    install $FD_FOLDER/fd $BIN_DIR
-    rm -rf $FD_FOLDER
+if [[ ! -e ".cargo/bin/cargo" ]]; then
+  curl https://sh.rustup.rs -sSf | sh -s -- -y
 else
-    echo "fd already installed."
+  echo "cargo already installed."
 fi
-##### END FD

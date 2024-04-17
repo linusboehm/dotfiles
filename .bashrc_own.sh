@@ -10,6 +10,7 @@ alias ls='ls -G --color --group-directories-first'
 alias ll='ls -lF --color --group-directories-first'
 
 # User specific aliases and functions
+export PATH="$PATH:$HOME/.local/nvim-linux64/bin"
 alias cmake="cmake3"
 alias vim="nvim"
 alias vimdiff="nvim -d"
@@ -276,5 +277,3 @@ export PROMPT_COMMAND="history -a; $PROMPT_COMMAND"
 # history -c
 # history -r
 alias hget='history -c; history -r'
-
-export PATH="$PATH:/home/lboehm/.local/nvim-linux64/bin"
