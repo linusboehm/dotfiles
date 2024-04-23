@@ -36,6 +36,8 @@ config.enable_tab_bar = true
 config.hide_tab_bar_if_only_one_tab = true
 config.scrollback_lines = 10000
 local color_scheme = wezterm.color.get_builtin_schemes()[config.color_scheme]
+config.automatically_reload_config = true
+
 -- -- order for ansi and brights: 1 black, 2 red, 3 green, 4 yellow, 5 blue, 6 magenta, 7 cyan, 8 white
 --   "ansi": [ ], -- ansi: normal colors
 --   "background": -- background of terminal
@@ -90,23 +92,21 @@ config.mouse_bindings = {
 
 wezterm.on("format-tab-title", function(tab, tabs, panes, config, hover, max_width)
 	local hostname = wezterm.hostname()
-	wezterm.log_warn(string.format("%s, %s", hostname, color_scheme["brights"][2]))
+	-- wezterm.log_warn(string.format("%s, %s", hostname, color_scheme["brights"][2]))
 	local title = tab.active_pane.title
-	if string.find(title, "-dev%d+:") then
-		local c = tab.is_active and "brights" or "ansi"
-		return {
-			{ Foreground = { Color = color_scheme[c][7] } },
-			{ Text = " " .. title .. " " },
-		}
+
+	local tab_format = tab.is_active and { { Background = { Color = "#1F3A50" } } } or {}
+	table.insert(tab_format, { Text = " " .. title .. " " })
+	local c = tab.is_active and "brights" or "ansi"
+
+	if string.find(title, "core[-]dev6") then
+		table.insert(tab_format, 1, { Foreground = { Color = color_scheme[c][3] } })
+	elseif string.find(title, "-dev%d+:") then
+		table.insert(tab_format, 1, { Foreground = { Color = color_scheme[c][7] } })
+	elseif string.find(title, "prod-") or string.find(title, "-prod%d+:") then
+		table.insert(tab_format, 1, { Foreground = { Color = color_scheme[c][2] } })
 	end
-	if string.find(title, "-prod%d+:") then
-		local c = tab.is_active and "brights" or "ansi"
-		return {
-			{ Foreground = { Color = color_scheme[c][2] } },
-			{ Text = " " .. title .. " " },
-		}
-	end
-	return title
+	return tab_format
 end)
 
 if is_windows() then
