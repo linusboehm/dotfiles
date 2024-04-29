@@ -117,7 +117,7 @@ fi
 ## CONFIG
 if [[ ! -d "$HOME/.config/nvim" ]]; then
   mkdir -p "$HOME/.config"
-  git clone git@github.com:linusboehm/lazyvim.git ~/.config/nvim || echo "nvim config already downloaded"
+  git clone https://github.com/linusboehm/lazyvim.git ~/.config/nvim || echo "nvim config already downloaded"
   cd ~
 else
   echo "nvim config already installed."
@@ -136,9 +136,9 @@ fi
 if [[ ! -d "repos/dotfiles" ]]; then
   shopt -s expand_aliases
   mkdir -p "$HOME/repos"
-  git clone --bare git@github.com:linusboehm/dotfiles.git "$HOME/repos/dotfiles" || echo "already downloaded repo"
+  git clone --bare https://github.com/linusboehm/dotfiles.git "$HOME/repos/dotfiles" || echo "already downloaded repo"
   function dotf() {
-    /usr/bin/git "--git-dir=$HOME/repos/dotfiles/ --work-tree=$HOME $*" # create alias to mng dotfiles
+    /usr/bin/git --git-dir="$HOME"/repos/dotfiles/ --work-tree="$HOME" "$@" # create alias to mng dotfiles
   }
   dotf config status.showUntrackedFiles no
   set +e

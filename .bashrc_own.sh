@@ -37,10 +37,10 @@ alias fkill='ps -ef | fzf | awk "{print $2}" | xargs kill -9'
 fcd() { cd "$(find . -type d -not -path '*/.*' | fzf)" && ls; }
 # fvim() { nvim "$(find . -type f -not -path '*/.*' | fzf --preview 'bat --color=always {}')"; }
 
-function gh() {
-  GIT_BASE=$(git remote -v | grep fetch | awk '{print $2}' | sed 's/git@/http:\/\//' | sed 's/com:/com\//' | sed 's/\.git//')
-  echo "${GIT_BASE}/tree/develop$(pwd | sed -E 's/.*repos//')"
-}
+# function gh() {
+#   GIT_BASE=$(git remote -v | grep fetch | awk '{print $2}' | sed 's/git@/http:\/\//' | sed 's/com:/com\//' | sed 's/\.git//')
+#   echo "${GIT_BASE}/tree/develop$(pwd | sed -E 's/.*repos//')"
+# }
 
 # git checkout worktree
 # checks out a bare repo with
@@ -293,6 +293,4 @@ source /usr/share/bash-completion/completions/git
 
 # history
 export PROMPT_COMMAND="history -a; $PROMPT_COMMAND"
-# history -c
-# history -r
 alias hget='history -c; history -r'

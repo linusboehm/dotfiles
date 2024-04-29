@@ -95,7 +95,7 @@ wezterm.on("format-tab-title", function(tab, tabs, panes, config, hover, max_wid
 	-- wezterm.log_warn(string.format("%s, %s", hostname, color_scheme["brights"][2]))
 	local title = tab.active_pane.title
 
-	local tab_format = tab.is_active and { { Background = { Color = "#1F3A50" } } } or {}
+	local tab_format = tab.is_active and { { Background = { Color = "#23425B" } } } or {}
 	table.insert(tab_format, { Text = " " .. title .. " " })
 	local c = tab.is_active and "brights" or "ansi"
 
