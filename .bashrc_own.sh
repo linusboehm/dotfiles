@@ -191,7 +191,7 @@ function nbranch() {
   fi
 }
 
-alias resurrect="tmux new-session -d && tmux run-shell ~/.config/tmux/plugins/tmux-resurrect/scripts/restore.sh && tmux kill-session -t 0"
+alias resurrect="tmux new-session -d && tmux run-shell ~/.tmux/plugins/tmux-resurrect/scripts/restore.sh && tmux kill-session -t 0"
 function ta() {
   if [ "$1" = "" ]; then
     tmux a -d -t main
