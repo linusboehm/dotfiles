@@ -28,6 +28,7 @@ config.audible_bell = "Disabled"
 -- Appearance
 -- ----------------------------------------------------
 
+config.window_decorations = "RESIZE"
 config.font = wezterm.font("Hack Nerd Font Mono")
 config.font_size = 12.0
 config.color_scheme = "nightfox" -- set colorscheme
