@@ -92,6 +92,20 @@ install_latest_from_gh "https://github.com/BurntSushi/ripgrep" "${ARCH}-unknown-
 install_latest_from_gh "https://github.com/jesseduffield/lazygit" ".*Linux_${ARCH}.*"
 install_latest_from_gh "https://github.com/sharkdp/bat" ".*${ARCH}-unknown-${OS}-gnu.tar.gz"
 install_latest_from_gh "https://github.com/sharkdp/fd" ".*-${ARCH}-unknown-${OS}-musl.tar.gz"
+install_latest_from_gh "https://github.com/dandavison/delta" ".*-${ARCH}-unknown-${OS}-musl.tar.gz"
+
+# ########################
+#### BAT
+if [[ ! -e "$(bat --config-dir)/themes/tokyonight_night.tmTheme" ]]; then
+  mkdir -p "$(bat --config-dir)/themes"
+  cd "$(bat --config-dir)/themes"
+  curl -O https://raw.githubusercontent.com/folke/tokyonight.nvim/main/extras/sublime/tokyonight_night.tmTheme
+  bat cache --build
+  cd "$HOME"
+else
+  echo "bat colorscheme already installed."
+fi
+# ########################
 
 # ########################
 #### NEOVIM
@@ -106,7 +120,7 @@ else
   echo "nvm already installed."
 fi
 
-if [[ ! -e ".local/nvim-linux64" ]]; then
+if [[ ! -d ".local/nvim-linux64" ]]; then
   get_latest_from_gh "https://github.com/neovim/neovim" ".*nvim-${OS}64.tar.gz$" "nvim"
   mv /tmp/setup_artifacts/nvim-linux64 "$HOME/.local/"
   rm -rf /tmp/setup_artifacts
@@ -129,6 +143,20 @@ if [[ ! -e ".local/bin/starship" ]]; then
   curl -sS https://starship.rs/install.sh | sh -s -- -y -b "$BIN_DIR"
 else
   echo "starship already installed."
+fi
+
+# ########################
+### FZF
+if [[ ! -e ".fzf/bin/fzf" ]]; then
+  git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf
+  ~/.fzf/install
+else
+  echo "fzf already installed."
+fi
+if [[ ! -d ".fzf/fzf-git.sh" ]]; then
+  git clone --depth 1 https://github.com/junegunn/fzf-git.sh.git ~/.fzf/fzf-git.sh
+else
+  echo "fzf-git.sh already installed."
 fi
 
 # ########################
@@ -157,15 +185,6 @@ if [[ ! -d "repos/dotfiles" ]]; then
   cd
 else
   echo "dotfiles already installed."
-fi
-
-# ########################
-### FZF
-if [[ ! -e ".fzf/bin/fzf" ]]; then
-  git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf
-  ~/.fzf/install
-else
-  echo "fzf already installed."
 fi
 
 # ########################

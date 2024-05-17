@@ -1,7 +1,3 @@
-[user]
-	name = Linus Boehm
-	email = linusboehm@gmail.com
-
 # improve performance for large repos (might cause some compability issues with GUI clients)
 # [feature]
 # 	manyFiles = true
@@ -10,18 +6,22 @@
 	defaultBranch = main
 
 [alias]
-    lg1 = log --graph --abbrev-commit --decorate --date=relative --format=format:'%C(bold blue)%h%C(reset) - %C(white)%s%C(reset) %C(dim white)- %an%C(reset)%C(bold yellow)%d%C(reset) %C(bold green)(%ar)%C(reset)' --all
+
+    lg1 = log --graph --abbrev-commit --decorate --date=relative --format=format:'%C(bold blue)%h %C(auto)- %s%C(reset)%C(auto)%d %C(dim white)- %an%C(reset) %C(green)(%ar)%C(reset)' --all
     lg2 = log --graph --abbrev-commit --decorate --format=format:'%C(bold blue)%h%C(reset) - %C(bold cyan)%aD%C(reset) %C(bold green)(%ar)%C(reset)%C(bold yellow)%d%C(reset)%n''          %C(white)%s%C(reset) %C(dim white)- %an%C(reset)' --all
     lg = !"git lg1"
+
     fixup = "!f() {                                                                                                                                            \
       git diff --cached --quiet && echo \"Nothing is staged\" && exit 1;                                                                                       \
       local filter;                                                                                                                                            \
       if [ -n $@ ] && [ -e $ ]; then                                                                                                                           \
         filter=\"-- $@\";                                                                                                                                      \
       fi;                                                                                                                                                      \
-      fixup_commit=$(git lg |                                                                                                                                  \
+      fixup_commit=$(git log                                                                                                                                   \
+            --graph --color=always --abbrev=7                                                                                                                  \
+            --format=\"%C(bold blue)%h %C(auto)- %s%C(reset)%C(auto)%d %C(dim white)- %an%C(reset) %C(green)(%ar)%C(reset)\" $@ |                                     \
                 fzf --ansi --no-sort --layout=reverse --tiebreak=index                                                                                         \
-                    --preview=\"f() { set -- \\$(echo -- \\$@ | rg -o '\\b[a-f0-9]{7,}\\b'); [ \\$# -eq 0 ] || git show --color=always \\$1 $filter; }; f {}\" \
+                    --preview=\"f() { set -- \\$(echo -- \\$@ | rg -o '\\b[a-f0-9]{7,}\\b'); [ \\$# -eq 0 ] || git show --color=always \\$1 $filter | delta; }; f {}\" \
                     --preview-window=bottom:60%);                                                                                                               \
       echo \"Amending commit: $fixup_commit\";                                                                                                                 \
       fixup_commit_sha=$(echo $fixup_commit | rg -o '\\b[a-f0-9]{7,}\\b');                                                                                     \
@@ -31,8 +31,26 @@
     };                                                                                                                                                         \
     f"
 
-[pager]
-    diff =
+    ad = "!f() {                                                                                                                                            \
+      local filter;                                                                                                                                            \
+      if [ -n $@ ] && [ -e $ ]; then                                                                                                                           \
+        filter=\"-- $@\";                                                                                                                                      \
+      fi;                                                                                                                                                      \
+      fixup_commit=$(git log                                                                                                                                   \
+            --graph --color=always --abbrev=7                                                                                                                  \
+            --format=\"%C(bold blue)%h %C(auto)- %s%C(reset)%C(auto)%d %C(dim white)- %an%C(reset) %C(green)(%ar)%C(reset)\" $@ |                                     \
+                fzf --ansi --no-sort --layout=reverse --tiebreak=index                                                                                         \
+                    --preview=\"f() { set -- \\$(echo -- \\$@ | rg -o '\\b[a-f0-9]{7,}\\b'); [ \\$# -eq 0 ] || git show --color=always \\$1 $filter | delta; }; f {}\" \
+                    --preview-window=bottom:60%);                                                                                                               \
+      echo \"Amending commit: $fixup_commit\";                                                                                                                 \
+      fixup_commit_sha=$(echo $fixup_commit | rg -o '\\b[a-f0-9]{7,}\\b');                                                                                     \
+      echo \"SHA: '$fixup_commit_sha'\";                                                                                                                       \
+      git rebase --update-refs --autostash -i $fixup_commit_sha^1;                                                                                \
+    };                                                                                                                                                         \
+    f"
+
+# [pager]
+#     diff =
 
 [core]
 	editor = nvim
@@ -55,3 +73,26 @@
 [merge]
 	tool = nvimdiff
 	keepBackup = false
+
+
+# DELTA
+[core]
+    pager = delta
+
+[interactive]
+    diffFilter = delta --color-only
+
+[delta]
+    navigate = true    # use n and N to move between diff sections
+    line-numbers = true
+    true-color = always
+    features = decorations
+
+[delta "decorations"]
+    hunk-header-style = omit
+
+[merge]
+    conflictstyle = diff3
+
+[diff]
+    colorMoved = default

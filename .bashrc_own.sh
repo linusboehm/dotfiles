@@ -11,9 +11,9 @@ alias ls='ls -G --color --group-directories-first'
 alias ll='ls -lF --color --group-directories-first'
 
 # User specific aliases and functions
-export PATH="$PATH:$HOME/.local/nvim-linux64/bin"
+export PATH="$HOME/.local/nvim-linux64/bin:$PATH"
 alias cmake="cmake3"
-alias vim="nvim"
+alias vim="$HOME/.local/nvim-linux64/bin/nvim"
 alias vimdiff="nvim -d"
 
 # Dirs
@@ -294,3 +294,9 @@ source /usr/share/bash-completion/completions/git
 # history
 export PROMPT_COMMAND="history -a; $PROMPT_COMMAND"
 alias hget='history -c; history -r'
+
+# bat
+export BAT_THEME=tokyonight_night
+source ~/.fzf/fzf-git.sh/fzf-git.sh
+
+export FZF_DEFAULT_OPTS="--bind 'ctrl-d:preview-half-page-down,ctrl-u:preview-half-page-up'"
