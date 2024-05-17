@@ -131,7 +131,7 @@ fi
 ## CONFIG
 if [[ ! -d "$HOME/.config/nvim" ]]; then
   mkdir -p "$HOME/.config"
-  git clone https://github.com/linusboehm/lazyvim.git ~/.config/nvim || echo "nvim config already downloaded"
+  git clone git@github.com:linusboehm/lazyvim.git ~/.config/nvim || echo "nvim config already downloaded"
   cd ~
 else
   echo "nvim config already installed."
