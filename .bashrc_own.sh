@@ -164,13 +164,24 @@ function removebranch() {
   git branch -D "$CURR_BRANCH_NAME"
 }
 
+function getinitials() {
+  word_count=$(echo "$1" | wc -w)
+
+  if [ "$word_count" -eq 1 ]; then
+    echo "$1" | awk '{print toupper(substr($0, 1, 2))}'
+  else
+    echo "$1" | awk '{for(i=1;i<=NF;i++) printf "%s", toupper(substr($i,1,1))}'
+  fi
+}
+
 function nbranch() {
   if [ "$1" = "" ]; then
     echo "No argument supplied"
     exit 0
   fi
 
-  INITIALS=$(git config user.name | sed "s/[a-z ]//g" | tr '[:lower:]' '[:upper:]')
+  INITIALS=$(getinitials "$(git config user.name)")
+
   DESC="${1#"${INITIALS}_"}"
   BRANCH_NAME=${INITIALS}_$DESC
 
