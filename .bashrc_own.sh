@@ -47,7 +47,7 @@ fcd() { cd "$(find . -type d -not -path '*/.*' | fzf)" && ls; }
 function gcw() {
   if [ "$1" = "" ]; then
     echo "No argument supplied"
-    exit 0
+    return
   fi
   REPO_ADDR=$1
   if [[ $# -eq 1 ]]; then # use repo dir name
@@ -57,7 +57,7 @@ function gcw() {
   fi
   echo "cloning into $REPO_DIR"
 
-  git clone --bare -- "$REPO_ADDR" "$REPO_DIR" && cd "$REPO_DIR" || exit 1
+  git clone --bare -- "$REPO_ADDR" "$REPO_DIR" && cd "$REPO_DIR" || return
 
   # get name of the HEAD remote branch (main/master/...)
   MAIN_BRANCH=$(git remote show origin | grep 'HEAD branch' | cut -d' ' -f5) # detect name of the main remote branch (main/master/...)
@@ -70,7 +70,7 @@ function gcw() {
 function renamebranch() {
   if [ "$1" = "" ]; then
     echo "No argument supplied"
-    exit 0
+    return
   fi
   NEW_BRANCH_NAME=$1
   CURR_BRANCH_NAME=$(git rev-parse --abbrev-ref HEAD)
@@ -94,10 +94,19 @@ function confirm() {
   return
 }
 
+function diffv() {
+  if [ "$#" -ne 2 ]; then
+    echo "require 2 args"
+    return
+  fi
+  # imply-local: https://github.com/sindrets/diffview.nvim/blob/3dc498c9777fe79156f3d32dddd483b8b3dbd95f/doc/diffview.txt#L148
+  vim -c "DiffviewOpen $1..$2 --imply-local"
+}
+
 function reviewpr() {
   if [ "$1" = "" ]; then
     echo "No argument supplied. Please provide PR ID"
-    exit 0
+    return
   fi
   PR_ID=$1
   PR_BRANCH=PR_REVIEW
@@ -153,6 +162,18 @@ function getbranch() {
 }
 
 function removebranch() {
+  BRANCH_NAME=$1
+  BARE_DIR=$(git rev-parse --git-common-dir)
+  cd "$BARE_DIR"
+
+  # delete the old branch on remote
+  git push origin :"$BRANCH_NAME" || echo "remote branch doesn't exists"
+  # remove worktree
+  git worktree remove --force "$BRANCH_NAME" 2>/dev/null || echo "$BRANCH_NAME worktree doesn't exist"
+  git branch -D "$BRANCH_NAME"
+}
+
+function removecurrbranch() {
   CURR_BRANCH_NAME=$(git rev-parse --abbrev-ref HEAD)
   BARE_DIR=$(git rev-parse --git-common-dir)
   cd "$BARE_DIR"
@@ -177,7 +198,7 @@ function getinitials() {
 function nbranch() {
   if [ "$1" = "" ]; then
     echo "No argument supplied"
-    exit 0
+    return
   fi
 
   INITIALS=$(getinitials "$(git config user.name)")
