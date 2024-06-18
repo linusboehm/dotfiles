@@ -20,9 +20,10 @@ if [[ "$OS" != "linux" ]]; then
   exit 1
 fi
 
-function get_latest_from_gh() {
+function get_version_from_gh() {
   REPO=${1/\/github.com/\/api.github.com/repos}
   PATTERN=$2
+  RELEASE="tags/$3"
   DESC=$(basename "$REPO")
   echo "Installing $DESC..."
   rm -rf /tmp/setup_artifacts
@@ -35,7 +36,7 @@ function get_latest_from_gh() {
   # echo "$URL: $LATEST"
   # curl -Ls "$URL" | tar -xz -C "/tmp/setup_artifacts"
 
-  ASSETS=$(curl -s "$REPO/releases/latest" |
+  ASSETS=$(curl -s "$REPO/releases/$RELEASE" |
     jq -r ".assets[] | select(.name | test(\"$PATTERN\")) | select(.name | test(\"sha256\") | not) | .browser_download_url")
   MATCHES=$(echo "$ASSETS" | wc -l)
   if [[ $MATCHES -ne 1 ]]; then
@@ -51,18 +52,28 @@ function get_latest_from_gh() {
   # tar -xzf /tmp/setup_artifacts/$ARCHIVE -C /tmp/setup_artifacts || echo "couldn't extract: $REPO"
 }
 
+function get_latest_from_gh() {
+  get_version_from_gh "$@ latest"
+}
+
 function install_latest_from_gh() {
+  install_version_from_gh "$@" latest
+}
+
+function install_version_from_gh() {
   REPO=$1
   PATTERN=$2
   REPO_DIR=$(basename "$REPO")
-  if [[ $# -eq 3 ]]; then
+  if [[ $# -eq 4 ]]; then
     BINARY=$3
-  elif [[ $# -eq 2 ]]; then
+    RELEASE=$4
+  elif [[ $# -eq 3 ]]; then
     BINARY=$REPO_DIR
+    RELEASE=$3
   fi
   if [[ ! -e "${BIN_DIR}/${BINARY}" ]]; then
     rm -rf /tmp/setup_artifacts
-    get_latest_from_gh "$REPO" "$PATTERN"
+    get_version_from_gh "$REPO" "$PATTERN" "$RELEASE"
 
     BIN_PATH=$(find /tmp/setup_artifacts -name "$BINARY")
     echo "bin path: $BIN_PATH"
@@ -121,7 +132,8 @@ else
 fi
 
 if [[ ! -d ".local/nvim-linux64" ]]; then
-  get_latest_from_gh "https://github.com/neovim/neovim" ".*nvim-${OS}64.tar.gz$" "nvim"
+  # get_latest_from_gh "https://github.com/neovim/neovim" ".*nvim-${OS}64.tar.gz$"
+  get_version_from_gh "https://github.com/neovim/neovim" ".*nvim-${OS}64.tar.gz$" "v0.9.5"
   mv /tmp/setup_artifacts/nvim-linux64 "$HOME/.local/"
   rm -rf /tmp/setup_artifacts
 else
