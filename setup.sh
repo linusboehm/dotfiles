@@ -23,7 +23,9 @@ fi
 function get_version_from_gh() {
   REPO=${1/\/github.com/\/api.github.com/repos}
   PATTERN=$2
-  RELEASE="tags/$3"
+  if [ "$3" != "latest" ]; then
+    RELEASE="tags/$3"
+  fi
   DESC=$(basename "$REPO")
   echo "Installing $DESC..."
   rm -rf /tmp/setup_artifacts
@@ -53,7 +55,7 @@ function get_version_from_gh() {
 }
 
 function get_latest_from_gh() {
-  get_version_from_gh "$@ latest"
+  get_version_from_gh "$@" latest
 }
 
 function install_latest_from_gh() {
@@ -107,11 +109,12 @@ install_latest_from_gh "https://github.com/dandavison/delta" ".*-${ARCH}-unknown
 
 # ########################
 #### BAT
-if [[ ! -e "$(bat --config-dir)/themes/tokyonight_night.tmTheme" ]]; then
-  mkdir -p "$(bat --config-dir)/themes"
-  cd "$(bat --config-dir)/themes"
+if [[ ! -e "$(./.local/bin/bat --config-dir)/themes/tokyonight_night.tmTheme" ]]; then
+  cd "$HOME"
+  mkdir -p "$(./.local/bin/bat --config-dir)/themes"
+  cd "$(./.local/bin/bat --config-dir)/themes"
   curl -O https://raw.githubusercontent.com/folke/tokyonight.nvim/main/extras/sublime/tokyonight_night.tmTheme
-  bat cache --build
+  ./.local/bin/bat cache --build
   cd "$HOME"
 else
   echo "bat colorscheme already installed."
@@ -132,8 +135,8 @@ else
 fi
 
 if [[ ! -d ".local/nvim-linux64" ]]; then
-  # get_latest_from_gh "https://github.com/neovim/neovim" ".*nvim-${OS}64.tar.gz$"
-  get_version_from_gh "https://github.com/neovim/neovim" ".*nvim-${OS}64.tar.gz$" "v0.9.5"
+  get_latest_from_gh "https://github.com/neovim/neovim" ".*nvim-${OS}64.tar.gz$"
+  # get_version_from_gh "https://github.com/neovim/neovim" ".*nvim-${OS}64.tar.gz$" "v0.9.5"
   mv /tmp/setup_artifacts/nvim-linux64 "$HOME/.local/"
   rm -rf /tmp/setup_artifacts
 else
