@@ -114,7 +114,7 @@ if [[ ! -e "$(./.local/bin/bat --config-dir)/themes/tokyonight_night.tmTheme" ]]
   mkdir -p "$(./.local/bin/bat --config-dir)/themes"
   cd "$(./.local/bin/bat --config-dir)/themes"
   curl -O https://raw.githubusercontent.com/folke/tokyonight.nvim/main/extras/sublime/tokyonight_night.tmTheme
-  ./.local/bin/bat cache --build
+  "$HOME"/.local/bin/bat cache --build
   cd "$HOME"
 else
   echo "bat colorscheme already installed."
