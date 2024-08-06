@@ -150,6 +150,9 @@ function getbranch() {
     cd "$BARE_DIR"
     WT_PATH=$BARE_DIR/$BRANCH_NAME
 
+    # git config --get remote.origin.fetch
+    # -> should return: `+refs/heads/*:refs/remotes/origin/*`
+    # -> if not, set refspec: git config remote.origin.fetch "+refs/heads/*:refs/remotes/origin/*"
     echo "fetching"
     git fetch
     echo "adding worktree"
