@@ -37,6 +37,23 @@ alias fkill='ps -ef | fzf | awk "{print $2}" | xargs kill -9'
 fcd() { cd "$(find . -type d -not -path '*/.*' | fzf)" && ls; }
 # fvim() { nvim "$(find . -type f -not -path '*/.*' | fzf --preview 'bat --color=always {}')"; }
 
+function gfzf() {
+    is_in_git_repo || return
+    local filter
+    if [[ -n $* ]] && [ -e $ ]; then
+      filter="-- $*"
+    fi;
+
+    COMMIT=$(git log \
+          --graph --color=always --abbrev=7 \
+          --format="%C(bold blue)%h %C(auto)- %s%C(reset)%C(auto)%d %C(dim white)- %an%C(reset) %C(green)(%ar)%C(reset)" "$@" | \
+              fzf --ansi --no-sort --layout=reverse --tiebreak=index \
+                  --preview="f() { set -- \$(echo -- \$@ | rg -o '\b[a-f0-9]{7,}\b'); [ \$# -eq 0 ] || git show --color=always \$1 $filter | delta; }; f {}" \
+                  --preview-window=bottom:60%)
+    COMMIT_SHA=$(echo "$COMMIT" | rg -o '\b[a-f0-9]{7,}\b')
+    echo "$COMMIT_SHA"
+}                                                                                                                                                         \
+
 # function gh() {
 #   GIT_BASE=$(git remote -v | grep fetch | awk '{print $2}' | sed 's/git@/http:\/\//' | sed 's/com:/com\//' | sed 's/\.git//')
 #   echo "${GIT_BASE}/tree/develop$(pwd | sed -E 's/.*repos//')"
@@ -111,7 +128,7 @@ function reviewpr() {
   PR_ID=$1
   PR_BRANCH=PR_REVIEW
   BARE_DIR=$(git rev-parse --git-common-dir)
-  MAIN_BRANCH=$(git remote show origin | grep 'HEAD branch' | cut -d' ' -f5)
+  # MAIN_BRANCH=$(git remote show origin | grep 'HEAD branch' | cut -d' ' -f5)
 
   cd "$BARE_DIR"
   echo "removing $PR_BRANCH worktree"
@@ -126,19 +143,22 @@ function reviewpr() {
   # echo "Running cmake..."
   # ./run_cmake.sh &>/dev/null || echo "ERROR RUNNING CMAKE"
   # echo "Done"
+  CMP_COMMIT=$(gfzf --)
+  printf "commit:\n$CMP_COMMIT\n"
   printf "${CYAN}Changed files:\n"
-  printf "  %s\n" "$(git diff --name-only "$MAIN_BRANCH"...)"
+  printf "  %s\n" "$(git diff --name-only "$CMP_COMMIT"...)"
   printf "$NC"
 
   if confirm "run pre-commit hooks"; then
     echo "runnign pre-commit hooks"
-    # pre-commit run --show-diff-on-failure --files $(git diff --name-only $MAIN_BRANCH...)
-    pre-commit run --files "$(git diff --name-only "$MAIN_BRANCH"...)"
+    # pre-commit run --show-diff-on-failure --files $(git diff --name-only $CMP_COMMIT...)
+    # shellcheck disable=SC2086,SC2046
+    pre-commit run --files $(git diff --name-only "$CMP_COMMIT"...) # ignore
   fi
   if confirm "open diffview"; then
     echo "runnign pre-commit hooks"
     # imply-local: https://github.com/sindrets/diffview.nvim/blob/3dc498c9777fe79156f3d32dddd483b8b3dbd95f/doc/diffview.txt#L148
-    vim -c "DiffviewOpen $MAIN_BRANCH... --imply-local"
+    vim -c "DiffviewOpen $CMP_COMMIT... --imply-local"
   fi
   echo "DONE WITH REVIEW"
 }
@@ -335,3 +355,76 @@ export BAT_THEME=tokyonight_night
 source ~/.fzf/fzf-git.sh/fzf-git.sh
 
 export FZF_DEFAULT_OPTS="--bind 'ctrl-d:preview-half-page-down,ctrl-u:preview-half-page-up'"
+
+function is_in_git_repo() {
+    # git rev-parse HEAD > /dev/null 2>&1
+    git rev-parse HEAD > /dev/null
+}
+
+# https://github.com/mtzfactory/dotfiles/blob/c847d957aeb8b12555db28fce2ae5a4bf886bc5c/custom-git-commands/git-fzf-test#L75
+# function gfzf() {
+#     local filter;
+#
+#     if [ -n $@ ] && [ -e $@ ]; then
+#         filter=\"-- $@\";
+#     fi;
+#
+#     # export LESS='-R'
+#     # export BAT_PAGER='less -S -R -M -i';
+#   # COMMIT_SHA=$(echo "$COMMIT" | rg -o '\b[a-f0-9]{7,}\b');                                                                                     \
+#
+#     git log \
+#         --graph --color=always --abbrev=7 --glob="refs/heads/*" \
+#         --format=format:"%C(bold blue)%h%C(reset) %C(dim white)%an%C(reset)%C(bold yellow)%d%C(reset) %C(white)%s%C(reset) %C(bold green)(%ar)%C(reset)" $@ |
+#             fzf --ansi --no-sort --layout=reverse --tiebreak=index \
+#                 --preview="f() { set -- $(echo -- $@ | rg -o '\b[a-f0-9]{7,}\b'); [ $# -eq 0 ] || git show --color=always $1 $filter | delta --line-numbers; }; f" \
+#                 --bind="ctrl-j:preview-down,ctrl-k:preview-up,ctrl-f:preview-page-down,ctrl-b:preview-page-up" \
+#                 --bind="ctrl-m:execute:
+#                         (rg -o '\b[a-f0-9]{7,}\b' | head -1 | xargs -I % -- git show --color=always %) << 'FZF-EOF'
+#                         {}
+#                         FZF-EOF" \
+#                 --preview-window=right:60%;
+#                 # --bind="alt-h:execute-silent:
+#                 #         (f() { set -- $(rg -o '\b[a-f0-9]{7,}\b' | head -1 | tr -d $'\n');
+#                 #         [[ -n $TMUX ]] && tmux display -d0 \"#[bg=blue,italics] Branches #[none,fg=black,bg=default] $(git branch --contains $1 | sed 's/^\*\?\s'
+#                 #         | sort | paste -sd, - | sed 's/,/, /g')\"; }; f) << 'FZF-EOF'
+#                 #         {}
+#                 #         FZF-EOF" \
+#                 # --bind="alt-H:execute-silent: \
+#                 #         (f() { set -- $(rg -o '\b[a-f0-9]{7,}\b' | head -1 | tr -d $'\n'); \
+#                 #         SUMMARY=\"$(git show --format='%s' $1 | head -1)\"; \
+#                 #         [[ -n $TMUX ]] && tmux display -d0 \"#[bg=blue,italics] Branches (Grep) #[none,fg=black,bg=default] $(git log --all --format='%H' -F \
+#                 #         --grep=\"$SUMMARY\" | xargs -I{} -- git branch --contains {} \
+#                 #         | sed 's/^\*\?\s\+/' | sort | uniq | paste -sd, - | sed 's/,/, /g')\"; }; f) << FZFEOF\n \
+#                 #         {} \
+#                 #         \nFZFEOF" \
+#                 # --bind="alt-n:execute-silent: \
+#                 #         (f() { set -- $(rg -o '\b[a-f0-9]{7,}\b' | head -1 | tr -d $'\n'); \
+#                 #         [[ -n $TMUX ]] && tmux display -d0 \"#[bg=blue,italics] Tags #[none,fg=black,bg=default] $(git tag --contains $1 | sed 's/^\*\?\s\+/' \
+#                 #         | sort | paste -sd, - | sed 's/,/, /g')\"; }; f) << FZFEOF\n \
+#                 #         {} \
+#                 #         \nFZFEOF" \
+#                 # --bind="alt-N:execute-silent: \
+#                 #         (f() { set -- $(rg -o '\b[a-f0-9]{7,}\b' | head -1 | tr -d $'\n'); \
+#                 #         SUMMARY=\"$(git show --format='%s' $1 | head -1)\"; \
+#                 #         [[ -n $TMUX ]] && tmux display -d0 \"#[bg=blue,italics] Tags (Grep) #[none,fg=black,bg=default] $(git log --all --format='%H' -F \
+#                 #         --grep=\"$SUMMARY\" | xargs -I{} -- git tag --contains {} \
+#                 #         | sed 's/^\*\?\s\+/' | sort | uniq | paste -sd, - | sed 's/,/, /g')\"; }; f) << FZFEOF\n \
+#                 #         {} \
+#                 #         \nFZFEOF" \
+#                 # --bind="ctrl-y:execute-silent: \
+#                 #         (f() { set -- $(rg -o '\b[a-f0-9]{7,}\b' | head -1 | tr -d $'\n'); \
+#                 #         printf '%s' $1 | clipboard; [[ -n $TMUX ]] && tmux display \"#[bg=blue,italics] Yanked #[none,fg=black,bg=default] $1\"; }; f) << FZFEOF\n \
+#                 #         {} \
+#                 #         \nFZFEOF" \
+#                 # --bind="ctrl-s:execute-silent: \
+#                 #         (f() { set -- $(rg -o '\b[a-f0-9]{7,}\b' | head -1 | tr -d $'\n'); \
+#                 #         SUMMARY=\"$(git show --format='%s' $1 | head -1)\"; \
+#                 #         printf '%s' \"$SUMMARY\" | clipboard; \
+#                 #         [[ -n $TMUX ]] && tmux display \"#[bg=blue,italics] Yanked #[none,fg=black,bg=default] $SUMMARY\"; }; f) << FZFEOF\n \
+#                 #         {} \
+#                 #         \nFZFEOF" \
+#                 # --bind="ctrl-l:execute:(f() { set -- $(rg -o '\b[a-f0-9]{7,}\b' | head -1 | tr -d $'\n'); git lgl | less -p $1 +'u'; }; f) << FZFEOF\n \
+#                 #         {} \
+#                 #         \nFZFEOF" \
+# };

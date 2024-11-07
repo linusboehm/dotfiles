@@ -38,14 +38,14 @@
       fi;                                                                                                                                                      \
       fixup_commit=$(git log                                                                                                                                   \
             --graph --color=always --abbrev=7                                                                                                                  \
-            --format=\"%C(bold blue)%h %C(auto)- %s%C(reset)%C(auto)%d %C(dim white)- %an%C(reset) %C(green)(%ar)%C(reset)\" $@ |                                     \
+            --format=\"%C(bold blue)%h %C(auto)- %s%C(reset)%C(auto)%d %C(dim white)- %an%C(reset) %C(green)(%ar)%C(reset)\" $@ |                              \
                 fzf --ansi --no-sort --layout=reverse --tiebreak=index                                                                                         \
-                    --preview=\"f() { set -- \\$(echo -- \\$@ | rg -o '\\b[a-f0-9]{7,}\\b'); [ \\$# -eq 0 ] || git show --color=always \\$1 $filter | delta; }; f {}\" \
-                    --preview-window=bottom:60%);                                                                                                               \
+                    --preview=\"f() { set -- \\$(echo -- \\$@ | rg -o '\\b[a-f0-9]{7,}\\b'); [ \\$# -eq 0 ] || git show --color=always \\$1 $filter | delta; }; f {}\"                                                                                    \
+                    --preview-window=bottom:60%);                                                                                                              \
       echo \"Amending commit: $fixup_commit\";                                                                                                                 \
       fixup_commit_sha=$(echo $fixup_commit | rg -o '\\b[a-f0-9]{7,}\\b');                                                                                     \
       echo \"SHA: '$fixup_commit_sha'\";                                                                                                                       \
-      git rebase --update-refs --autostash -i $fixup_commit_sha^1;                                                                                \
+      git rebase --update-refs --autostash -i $fixup_commit_sha^1;                                                                                             \
     };                                                                                                                                                         \
     f"
 
