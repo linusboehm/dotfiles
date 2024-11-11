@@ -149,14 +149,14 @@ function reviewpr() {
   printf "  %s\n" "$(git diff --name-only "$CMP_COMMIT"...)"
   printf "$NC"
 
-  if confirm "run pre-commit hooks"; then
+  if confirm "run pre-commit hooks [pre-commit run --files \$(git diff --name-only $CMP_COMMIT...)]"; then
     echo "runnign pre-commit hooks"
     # pre-commit run --show-diff-on-failure --files $(git diff --name-only $CMP_COMMIT...)
     # shellcheck disable=SC2086,SC2046
     pre-commit run --files $(git diff --name-only "$CMP_COMMIT"...) # ignore
   fi
-  if confirm "open diffview"; then
-    echo "runnign pre-commit hooks"
+  if confirm "open diffview [vim -c \"DiffviewOpen ${CMP_COMMIT}... --imply-local\"]"; then
+    echo "running pre-commit hooks: [vim -c \"DiffviewOpen ${CMP_COMMIT}... --imply-local\"]"
     # imply-local: https://github.com/sindrets/diffview.nvim/blob/3dc498c9777fe79156f3d32dddd483b8b3dbd95f/doc/diffview.txt#L148
     vim -c "DiffviewOpen $CMP_COMMIT... --imply-local"
   fi
