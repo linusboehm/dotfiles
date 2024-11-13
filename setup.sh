@@ -45,8 +45,21 @@ function get_version_from_gh() {
     echo "expected 1 match for $REPO, found $MATCHES ($ASSETS)... Aborting"
     exit 1
   fi
-  curl -Ls "$ASSETS" |
-    tar -xz -C "/tmp/setup_artifacts"
+  # curl -Ls "$ASSETS" |
+  #   tar -xz -C "/tmp/setup_artifacts"
+
+  # Download the file
+  curl -Ls "$ASSETS" -o /tmp/setup_artifacts/downloaded_file
+
+  # Determine the file type and extract accordingly
+  if [[ "$ASSETS" == *.tar.gz ]]; then
+    tar -xz -f /tmp/setup_artifacts/downloaded_file -C /tmp/setup_artifacts
+  elif [[ "$ASSETS" == *.zip ]]; then
+    unzip /tmp/setup_artifacts/downloaded_file -d /tmp/setup_artifacts
+  else
+    echo "Unsupported file type"
+    exit 1
+  fi
 
   # gh release download -R "$REPO" -D /tmp/setup_artifacts -p "$PATTERN" --clobber
   # rm -rf /tmp/setup_artifacts/*sha256*
@@ -106,6 +119,7 @@ install_latest_from_gh "https://github.com/jesseduffield/lazygit" ".*Linux_${ARC
 install_latest_from_gh "https://github.com/sharkdp/bat" ".*${ARCH}-unknown-${OS}-gnu.tar.gz"
 install_latest_from_gh "https://github.com/sharkdp/fd" ".*-${ARCH}-unknown-${OS}-musl.tar.gz"
 install_latest_from_gh "https://github.com/dandavison/delta" ".*-${ARCH}-unknown-${OS}-musl.tar.gz"
+install_latest_from_gh "https://github.com/sxyazi/yazi" ".*-${ARCH}-unknown-${OS}-musl.zip"
 
 # ########################
 #### BAT
