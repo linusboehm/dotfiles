@@ -1,0 +1,150 @@
+#!/home/lboehm/.local/bin/python3.12
+
+import sys
+import json
+import urllib.request
+import os
+import tempfile
+import subprocess
+import re
+
+QUESTION = "# Question"
+ANSWER = "# Answer"
+TAGS = "# Tags"
+DECK = "# Deck"
+DEFAULT_DECK = "Default"
+
+
+def invoke(action, **params):
+    requestJson = json.dumps({"action": action, "version": 6, "params": params}).encode("utf-8")
+
+    response = json.load(
+        urllib.request.urlopen(urllib.request.Request("http://localhost:8765", requestJson))
+    )
+
+    if response.get("error") is not None:
+        raise Exception(response["error"])
+    return response["result"]
+
+
+def get_editor():
+    # Get the editor from the environment or default to 'vim'
+    return os.environ.get("EDITOR", "nvim")
+
+
+def edit_text_in_editor(initial_text):
+    # Create a temporary file
+    with tempfile.NamedTemporaryFile(suffix=".md", delete=False, mode="w+", encoding="utf-8") as tf:
+        tf_name = tf.name
+        tf.write(initial_text)
+        tf.flush()
+
+        # Open the editor
+        subprocess.call([get_editor(), tf_name])
+
+        # Read the content back
+        tf.seek(0)
+        content = tf.read()
+
+    # Delete the temporary file
+    os.unlink(tf_name)
+
+    return content
+
+
+def parse_card_content(content):
+    def maybe_abort(msg):
+        try:
+            input(msg)
+        except KeyboardInterrupt:
+            print("\nOperation aborted by user.")
+            sys.exit(1)
+
+    pattern = rf"^({QUESTION}|{ANSWER}|{TAGS}|{DECK}):.*$"
+    sections = {}
+    current_section = None
+    lines = content.splitlines()
+    for line in lines:
+        stripped_line = line.strip()
+        match = re.match(pattern, stripped_line)
+        if match:
+            current_section = match.group(1)
+            sections[current_section] = []
+        elif current_section:
+            sections[current_section].append(line)
+        else:
+            continue  # Ignore lines outside of sections
+
+    # Ensure required sections are present
+    if QUESTION not in sections or ANSWER not in sections:
+        maybe_abort(f"Error: '{QUESTION}' and '{ANSWER}:' sections are required: {sections}")
+        return False, None, None, None, None
+
+    front = "\n".join(sections[QUESTION]).strip()
+    back = "\n".join(sections[ANSWER]).strip()
+    tags = []
+
+    if TAGS in sections:
+        tags_content = "\n".join(sections[TAGS]).strip()
+        tags = tags_content.replace(",", " ").split()
+
+    if not front or not back:
+        maybe_abort("Error: Front or back content is empty.")
+        return False, None, None, None, None
+
+    deck = sections.get(DECK, [DEFAULT_DECK])[0].strip()
+    deck = deck if deck else DEFAULT_DECK
+    return True, front, back, deck, tags
+
+
+def main():
+    try:
+        # Fetch existing deck names and tags from Anki
+        decks = [d for d in invoke("deckNames") if "::" not in d]
+        decks = ", ".join(decks)
+        tags_list = ", ".join(invoke("getTags"))
+    except Exception as e:
+        print(f"Error fetching data from AnkiConnect: {e}")
+        sys.exit(1)
+
+    initial_text = f"""{QUESTION}:
+
+
+{ANSWER}:
+
+
+{TAGS}: ({tags_list})
+
+
+{DECK}: (default: {DEFAULT_DECK}, existing: {decks})
+
+
+"""
+
+    success = False
+    content = initial_text
+    while not success:
+        content = edit_text_in_editor(content)
+        success, front, back, deck, tags = parse_card_content(content)
+
+    note = {
+        "deckName": deck,
+        "modelName": "KaTeX and Markdown Basic (Color)",
+        "fields": {"Front": front, "Back": back},
+        "tags": tags,
+    }
+
+    try:
+        result = invoke("addNote", note=note)
+        if result:
+            print(
+                f"Note added successfully to deck '{deck}' with tags: {', '.join(tags) if tags else 'None'}."
+            )
+        else:
+            print("Failed to add the note. It may be a duplicate.")
+    except Exception as e:
+        print(f"Error: {e}")
+
+
+if __name__ == "__main__":
+    main()
