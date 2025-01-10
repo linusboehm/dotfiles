@@ -16,6 +16,25 @@ alias cmake="cmake3"
 alias vim="$HOME/.local/nvim-linux64/bin/nvim"
 alias vimdiff="nvim -d"
 
+function wttr() {
+  if [ $# -eq 0 ]; then
+    # curl -s https://v2.wttr.in/nyc?F
+    curl -s v2.wttr.in/nyc?F | sed 's/^│//; s/│$//' | sed '/^[[:space:]╷]*$/d' | grep -v '^└─*┘$' | tail -n +2 | awk '{buffer[NR]=$0} END {print buffer[NR]; for (i=1; i<NR; i++) print buffer[i]}' | head -n -3 | awk '{buffer[NR]=$0} END {print buffer[NR]; for (i=1;
+    i<NR; i++) print buffer[i]}' | head -n -2 | grep -v -E '([→↘↗].*){5,}'
+  else
+    # curl -s https://v2.wttr.in/"$*"?F
+    curl -s v2.wttr.in/"$*"?F | sed 's/^│//; s/│$//' | sed '/^[[:space:]╷]*$/d' | grep -v '^└─*┘$' | tail -n +2 | awk '{buffer[NR]=$0} END {print buffer[NR]; for (i=1; i<NR; i++) print buffer[i]}' | head -n -3 | awk '{buffer[NR]=$0} END {print buffer[NR]; for (i=1;
+i<NR; i++) print buffer[i]}' | head -n -2 | grep -v -E '([→↘↗].*){5,}'
+  fi
+}
+function wttr1() {
+  if [ $# -eq 0 ]; then
+    curl -s https://wttr.in/F{nyc}?F
+  else
+    curl -s https://wttr.in/"$*"?F
+  fi
+}
+
 # Dirs
 alias ..="cd .."
 alias ...="cd ../.."
