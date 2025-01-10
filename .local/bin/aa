@@ -1,18 +1,29 @@
 #!/home/lboehm/.local/bin/python3.12
 
-import sys
+
+import argparse
 import json
-import urllib.request
 import os
-import tempfile
-import subprocess
+import random
 import re
+import string
+import subprocess
+import sys
+import tempfile
+import urllib.request
+from datetime import datetime
+
+import html2text
+import markdown
+from markdown.extensions.codehilite import CodeHiliteExtension
+from markdown.extensions.tables import TableExtension
+from pygments.formatters import HtmlFormatter
 
 QUESTION = "# Question"
 ANSWER = "# Answer"
 TAGS = "# Tags"
 DECK = "# Deck"
-DEFAULT_DECK = "Default"
+DEFAULT_DECK = "EG"
 
 
 def invoke(action, **params):
@@ -52,15 +63,16 @@ def edit_text_in_editor(initial_text):
     return content
 
 
-def parse_card_content(content):
-    def maybe_abort(msg):
-        try:
-            input(msg)
-        except KeyboardInterrupt:
-            print("\nOperation aborted by user.")
-            sys.exit(1)
+def maybe_abort(msg):
+    try:
+        input(msg + " enter to retry, <ctrl-c> to abort.")
+    except KeyboardInterrupt:
+        print("\nOperation aborted by user.")
+        sys.exit(1)
 
-    pattern = rf"^({QUESTION}|{ANSWER}|{TAGS}|{DECK}):.*$"
+
+def parse_card_content(content):
+    pattern = rf"^({QUESTION}|{ANSWER}|{TAGS}|{DECK}).*$"
     sections = {}
     current_section = None
     lines = content.splitlines()
@@ -78,7 +90,7 @@ def parse_card_content(content):
     # Ensure required sections are present
     if QUESTION not in sections or ANSWER not in sections:
         maybe_abort(f"Error: '{QUESTION}' and '{ANSWER}:' sections are required: {sections}")
-        return False, None, None, None, None
+        return None, None, None, None
 
     front = "\n".join(sections[QUESTION]).strip()
     back = "\n".join(sections[ANSWER]).strip()
@@ -90,60 +102,164 @@ def parse_card_content(content):
 
     if not front or not back:
         maybe_abort("Error: Front or back content is empty.")
-        return False, None, None, None, None
+        return None, None, None, None
 
-    deck = sections.get(DECK, [DEFAULT_DECK])[0].strip()
-    deck = deck if deck else DEFAULT_DECK
-    return True, front, back, deck, tags
+    deck = sections.get(DECK)
+    if deck and len(deck) > 1 and deck[0].strip():
+        deck = deck[0].strip()
+    else:
+        deck = DEFAULT_DECK
+    return front, back, deck, tags
 
 
-def main():
+def md_to_html(md):
+    # Convert Markdown to HTML
+    html_content = markdown.markdown(
+        md,
+        extensions=[
+            "fenced_code",  # For fenced code blocks
+            TableExtension(),  # For tables
+            CodeHiliteExtension(),  # For syntax highlighting
+        ],
+    )
+
+    # add pygments style
+    formatter = HtmlFormatter(style="material")
+    css = f"<style>{formatter.get_style_defs('.codehilite')}</style>"
+    return f"{css}\n{html_content}"
+
+
+def get_decks_and_tags():
     try:
         # Fetch existing deck names and tags from Anki
         decks = [d for d in invoke("deckNames") if "::" not in d]
         decks = ", ".join(decks)
-        tags_list = ", ".join(invoke("getTags"))
+        tags = ", ".join(invoke("getTags"))
     except Exception as e:
         print(f"Error fetching data from AnkiConnect: {e}")
         sys.exit(1)
-
-    initial_text = f"""{QUESTION}:
-
-
-{ANSWER}:
+    return decks, tags
 
 
-{TAGS}: ({tags_list})
+def save_content_to_file(content, deck):
+    # Create the directory if it doesn't exist
+    directory = os.path.join(os.path.expanduser("~"), "anki", deck)
+    os.makedirs(directory, exist_ok=True)
+
+    # Generate the filename with the date and a random name
+    date_str = datetime.now().strftime("%Y%m%d")
+    random_str = "".join(random.choices(string.ascii_lowercase + string.digits, k=8))
+    filename = f"{date_str}_{random_str}.md"
+    filepath = os.path.join(directory, filename)
+
+    # Write the content to the file
+    with open(filepath, "w", encoding="utf-8") as file:
+        file.write(content)
+
+    print(f"Content saved to {filepath}")
 
 
-{DECK}: (default: {DEFAULT_DECK}, existing: {decks})
+def get_md(note_id):
+    def clean_code_blocks(section):
+        s = "    "
+        os = f"\n{s}\n"
+        ts = f"\n{s}\n{s}\n"
+        cb = "\n```\n"
+        return section.strip().replace(ts, cb).replace(os, cb)
+
+    notes_info = invoke("notesInfo", notes=[note_id])
+    note_info = notes_info[0]
+    fields = note_info["fields"]
+    markdown_converter = html2text.HTML2Text()
+    markdown_converter.ignore_links = False  # Keep links intact
+    front_md = clean_code_blocks(markdown_converter.handle(fields["Front"]["value"]))
+    back_md = clean_code_blocks(markdown_converter.handle(fields["Back"]["value"]))
+    return front_md, back_md
+
+
+def get_id(query):
+    note_ids = invoke("findNotes", query=query)
+    if not note_ids:
+        print(f"No notes found matching the query: {query}")
+        sys.exit(1)
+    elif len(note_ids) > 1:
+        print("Multiple notes found matching the query. Please refine your search.")
+        print(f"Note IDs: {note_ids}")
+        sys.exit(1)
+    return note_ids[0]
+
+
+def get_initial_text(id):
+    front_md = ""
+    back_md = ""
+    if id:
+        front_md, back_md = get_md(id)
+
+    decks, tags = get_decks_and_tags()
+    initial_text = f"""{QUESTION}
+{front_md}
+
+{ANSWER}
+{back_md}
+
+
+{TAGS} ({tags})
+
+
+{DECK} (default: {DEFAULT_DECK}, existing: {decks})
 
 
 """
+    return initial_text
 
-    success = False
-    content = initial_text
-    while not success:
+
+def main():
+    parser = argparse.ArgumentParser(description="Anki card creator script")
+    parser.add_argument("-q", "--query", help="search query")
+    args = parser.parse_args()
+    id = None
+    if args.query:
+        id = get_id(args.query)
+
+    content = get_initial_text(id)
+    front = ""
+    back = ""
+    deck = ""
+    tags = []
+    while not all([front, back, deck]):
         content = edit_text_in_editor(content)
-        success, front, back, deck, tags = parse_card_content(content)
+        front, back, deck, tags = parse_card_content(content)
 
-    note = {
-        "deckName": deck,
-        "modelName": "KaTeX and Markdown Basic (Color)",
-        "fields": {"Front": front, "Back": back},
-        "tags": tags,
-    }
+    front = md_to_html(front)
+    back = md_to_html(back)
 
-    try:
-        result = invoke("addNote", note=note)
-        if result:
-            print(
-                f"Note added successfully to deck '{deck}' with tags: {', '.join(tags) if tags else 'None'}."
-            )
-        else:
-            print("Failed to add the note. It may be a duplicate.")
-    except Exception as e:
-        print(f"Error: {e}")
+    if id:
+        note = {
+            "fields": {"Front": front, "Back": back},
+            "id": id,
+        }
+        operation = "updateNoteFields"
+    else:
+        note = {
+            "deckName": deck,
+            "modelName": "Basic",
+            "fields": {"Front": front, "Back": back},
+            "tags": tags,
+        }
+        operation = "addNote"
+
+    while True:
+        try:
+            result = invoke(operation, note=note)
+            print(result)
+            if id or result:
+                print("done...")
+                save_content_to_file(content, deck)
+                break
+            else:
+                maybe_abort("Failed to add the note. It may be a duplicate.")
+        except Exception as e:
+            maybe_abort(f"Error: {e}, enter to retry, <ctrl-c> to abort.")
 
 
 if __name__ == "__main__":
