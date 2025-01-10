@@ -120,6 +120,7 @@ install_latest_from_gh "https://github.com/sharkdp/bat" ".*${ARCH}-unknown-${OS}
 install_latest_from_gh "https://github.com/sharkdp/fd" ".*-${ARCH}-unknown-${OS}-musl.tar.gz"
 install_latest_from_gh "https://github.com/dandavison/delta" ".*-${ARCH}-unknown-${OS}-musl.tar.gz"
 install_latest_from_gh "https://github.com/sxyazi/yazi" ".*-${ARCH}-unknown-${OS}-musl.zip"
+install_latest_from_gh "https://github.com/sxyazi/yazi" ".*-${ARCH}-unknown-${OS}-musl.zip" "ya"
 
 # ########################
 #### BAT
