@@ -230,3 +230,7 @@ if [[ ! -e ".cargo/bin/cargo" ]]; then
 else
   echo "cargo already installed."
 fi
+
+mkdir -p ~/.config/bat/themes
+ln -s ~/.local/share/nvim/lazy/tokyonight.nvim/extras/sublime ~/.config/bat/themes/tokyonight
+bat cache --build
