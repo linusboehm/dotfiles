@@ -15,7 +15,7 @@ local config = wezterm.config_builder()
 -- end
 
 local is_windows = function()
-	return wezterm.target_triple:find("windows") ~= nil
+  return wezterm.target_triple:find("windows") ~= nil
 end
 
 -- ----------------------------------------------------
@@ -23,6 +23,7 @@ end
 -- ----------------------------------------------------
 
 config.audible_bell = "Disabled"
+config.max_fps = 120
 
 -- ----------------------------------------------------
 -- Appearance
@@ -30,7 +31,7 @@ config.audible_bell = "Disabled"
 
 config.window_decorations = "RESIZE"
 config.font = wezterm.font("Hack Nerd Font Mono")
-config.font_size = 12.0
+config.font_size = 10.0
 config.color_scheme = "nightfox" -- set colorscheme
 config.window_background_opacity = 1.0
 config.enable_tab_bar = true
@@ -61,12 +62,12 @@ config.hyperlink_rules = wezterm.default_hyperlink_rules()
 -- make username/project paths clickable. this implies paths like the following are for github.
 -- ( "nvim-treesitter/nvim-treesitter" | `wez/wezterm` | "wez/wezterm.git" )
 table.insert(config.hyperlink_rules, {
-	regex = [[["'`]{1}([\w\d]{1}[-\w\d]+)(/){1}([-\w\d]+\.?(?!hp*")[-\w\d]*)["'`]{1}]],
-	format = "https://www.github.com/$1/$3",
+  regex = [[["'`]{1}([\w\d]{1}[-\w\d]+)(/){1}([-\w\d]+\.?(?!hp*")[-\w\d]*)["'`]{1}]],
+  format = "https://www.github.com/$1/$3",
 })
 table.insert(config.hyperlink_rules, {
-	regex = "(\\bwww[.]{1}\\S+[.]{1}[\\/a-zA-Z0-9-]*)",
-	format = "https:$0",
+  regex = "(\\bwww[.]{1}\\S+[.]{1}[\\/a-zA-Z0-9-]*)",
+  format = "https:$0",
 })
 
 -- ----------------------------------------------------
@@ -76,56 +77,88 @@ table.insert(config.hyperlink_rules, {
 -- copy and paste with right mouse button
 local act = wezterm.action
 config.mouse_bindings = {
-	{
-		event = { Down = { streak = 1, button = "Right" } },
-		mods = "NONE",
-		action = wezterm.action_callback(function(window, pane)
-			local has_selection = window:get_selection_text_for_pane(pane) ~= ""
-			if has_selection then
-				window:perform_action(act.CopyTo("ClipboardAndPrimarySelection"), pane)
-				window:perform_action(act.ClearSelection, pane)
-			else
-				window:perform_action(act({ PasteFrom = "Clipboard" }), pane)
-			end
-		end),
-	},
+  {
+    event = { Down = { streak = 1, button = "Right" } },
+    mods = "NONE",
+    action = wezterm.action_callback(function(window, pane)
+      local has_selection = window:get_selection_text_for_pane(pane) ~= ""
+      if has_selection then
+        window:perform_action(act.CopyTo("ClipboardAndPrimarySelection"), pane)
+        window:perform_action(act.ClearSelection, pane)
+      else
+        window:perform_action(act({ PasteFrom = "Clipboard" }), pane)
+      end
+    end),
+  },
 }
 
 wezterm.on("format-tab-title", function(tab, tabs, panes, config, hover, max_width)
-	local hostname = wezterm.hostname()
-	-- wezterm.log_warn(string.format("%s, %s", hostname, color_scheme["brights"][2]))
-	local title = tab.active_pane.title
+  local hostname = wezterm.hostname()
+  -- wezterm.log_warn(string.format("%s, %s", hostname, color_scheme["brights"][2]))
+  local title = tab.active_pane.title
 
-	local tab_format = tab.is_active and { { Background = { Color = "#23425B" } } } or {}
-	table.insert(tab_format, { Text = " " .. title .. " " })
-	local c = tab.is_active and "brights" or "ansi"
+  local tab_format = tab.is_active and { { Background = { Color = "#23425B" } } } or {}
+  table.insert(tab_format, { Text = " " .. title .. " " })
+  local c = tab.is_active and "brights" or "ansi"
 
-	if string.find(title, "core[-]dev6") then
-		table.insert(tab_format, 1, { Foreground = { Color = color_scheme[c][3] } })
-	elseif string.find(title, "-dev%d+:") then
-		table.insert(tab_format, 1, { Foreground = { Color = color_scheme[c][7] } })
-	elseif string.find(title, "prod-") or string.find(title, "-prod%d+:") then
-		table.insert(tab_format, 1, { Foreground = { Color = color_scheme[c][2] } })
-	end
-	return tab_format
+  if string.find(title, "core[-]dev6") then
+    table.insert(tab_format, 1, { Foreground = { Color = color_scheme[c][3] } })
+  elseif string.find(title, "-dev%d+:") then
+    table.insert(tab_format, 1, { Foreground = { Color = color_scheme[c][7] } })
+  elseif string.find(title, "prod-") or string.find(title, "-prod%d+:") then
+    table.insert(tab_format, 1, { Foreground = { Color = color_scheme[c][2] } })
+  end
+  return tab_format
 end)
 
 if is_windows() then
-	-- ----------------------------------------------------
-	-- WSL
-	-- ----------------------------------------------------
-	config.wsl_domains = {
-		{
-			-- The name of this specific domain.  Must be unique amonst all types
-			-- of domain in the configuration file.
-			name = "WSL:AlmaLinux-8",
-			-- The name of the distribution.  This identifies the WSL distribution.
-			-- It must match a distribution from `wsl -l -v` output
-			distribution = "AlmaLinux-8",
-			default_cwd = "~",
-		},
-	}
-	config.default_domain = "WSL:AlmaLinux-8"
+  -- ----------------------------------------------------
+  -- WSL
+  -- ----------------------------------------------------
+  config.wsl_domains = {
+    {
+      -- The name of this specific domain.  Must be unique amonst all types
+      -- of domain in the configuration file.
+      name = "WSL:AlmaLinux-8",
+      -- The name of the distribution.  This identifies the WSL distribution.
+      -- It must match a distribution from `wsl -l -v` output
+      distribution = "AlmaLinux-8",
+      default_cwd = "~",
+    },
+  }
+  config.default_domain = "WSL:AlmaLinux-8"
 end
+
+-- ----------------------------------------------------
+-- keys
+-- ----------------------------------------------------
+config.keys = {
+  -- This will create a new split and run your default program inside it
+  {
+    key = "|",
+    mods = "CTRL|SHIFT",
+    action = wezterm.action.SplitHorizontal({ domain = "CurrentPaneDomain" }),
+  },
+    {
+    key = 'h',
+    mods = 'CTRL|SHIFT',
+    action = act.ActivatePaneDirection 'Left',
+  },
+  {
+    key = 'l',
+    mods = 'CTRL|SHIFT',
+    action = act.ActivatePaneDirection 'Right',
+  },
+  {
+    key = 'k',
+    mods = 'CTRL|SHIFT',
+    action = act.ActivatePaneDirection 'Up',
+  },
+  {
+    key = 'j',
+    mods = 'CTRL|SHIFT',
+    action = act.ActivatePaneDirection 'Down',
+  },
+}
 
 return config
