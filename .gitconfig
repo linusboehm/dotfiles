@@ -55,9 +55,6 @@
 [core]
 	editor = nvim
 
-[mergetool]
-	keepBackup = false
-
 # [difftool]
 # 	prompt = false # do not ask for confirmation
 
@@ -82,11 +79,18 @@
 [interactive]
     diffFilter = delta --color-only
 
+
+[include]
+path = ~/.local/share/nvim/lazy/tokyonight.nvim/extras/delta/tokyonight_moon.gitconfig
+
 [delta]
-    navigate = true    # use n and N to move between diff sections
-    line-numbers = true
-    true-color = always
-    features = decorations
+navigate = true    # use n and N to move between diff sections
+line-numbers = true
+true-color = always
+features = decorations
+light = false      # set to true if you're in a terminal w/ a light background color (e.g. the default macOS terminal)
+side-by-side = false
+syntax-theme = tokyonight_moon
 
 [delta "decorations"]
     hunk-header-style = omit
