@@ -1,0 +1,47 @@
+#!/bin/bash
+
+usage() {
+  echo "Usage: $0 <epoch_time | date_string> [format]"
+  echo "If input is an epoch timestamp (seconds, milliseconds, microseconds, or nanoseconds), it converts to a human-readable date."
+  echo "If input is a human-readable date, it converts to an epoch timestamp."
+  echo "[format]: Optional strftime format (default: '%Y-%m-%d %H:%M:%S.%N')"
+  exit 1
+}
+
+if [ "$1" = "" ]; then
+  usage
+fi
+
+input="$1"
+second_arg="$2"
+
+# Check if input is numeric (epoch timestamp)
+if [[ "$input" =~ ^[0-9]+$ ]]; then
+  format="${second_arg:-%Y-%m-%d %H:%M:%S.%N}" # Default format with nanosecond precision
+  length=${#input}
+  if [ "$length" -eq 10 ]; then # Seconds
+    timestamp="$input"
+  elif [ "$length" -eq 13 ]; then # Milliseconds
+    timestamp="${input:0:10}.${input:10:3}"
+  elif [ "$length" -eq 16 ]; then # Microseconds
+    timestamp="${input:0:10}.${input:10:6}"
+  elif [ "$length" -eq 19 ]; then # Nanoseconds
+    timestamp="${input:0:10}.${input:10:9}"
+  else
+    echo "Invalid epoch timestamp length."
+    exit 1
+  fi
+  date -d @"$timestamp" +"$format"
+else
+  # Convert human-readable date to epoch timestamp with sub-second precision
+  epoch_seconds=$(date -d "$input" +%s 2>/dev/null)
+  epoch_nanos=$(date -d "$input" +%N 2>/dev/null)
+  if [ "$epoch_seconds" = "" ]; then
+    echo "Invalid date format. Use 'YYYY-MM-DD HH:MM:SS' or similar."
+    exit 1
+  fi
+  echo "s:  $epoch_seconds"
+  echo "ms: ${epoch_seconds}$(printf '%03d' "${epoch_nanos:0:3}")"
+  echo "us: ${epoch_seconds}$(printf '%06d' "${epoch_nanos:0:6}")"
+  echo "ns: ${epoch_seconds}$(printf '%09d' "$epoch_nanos")"
+fi
