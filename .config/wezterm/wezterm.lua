@@ -30,9 +30,12 @@ config.max_fps = 120
 -- ----------------------------------------------------
 
 config.window_decorations = "RESIZE"
-config.font = wezterm.font("Hack Nerd Font Mono")
+config.font = wezterm.font("Hack Nerd Font")
+-- config.font = wezterm.font("JetBrains Mono")
+-- config.font = wezterm.font("Maple Mono")
 config.font_size = 10.0
-config.color_scheme = "nightfox" -- set colorscheme
+-- config.color_scheme = "nightfox" -- set colorscheme
+config.color_scheme = "Tokyo Night Moon" -- set colorscheme
 config.window_background_opacity = 1.0
 config.enable_tab_bar = true
 config.hide_tab_bar_if_only_one_tab = true
@@ -111,6 +114,16 @@ wezterm.on("format-tab-title", function(tab, tabs, panes, config, hover, max_wid
   return tab_format
 end)
 
+wezterm.on("update-status", function(window, pane)
+  local overrides = window:get_config_overrides() or {}
+  wezterm.log_warn(pane:get_domain_name())
+  if pane:get_domain_name() == [[WSL:Ubuntu]] then
+    wezterm.log_warn("Ubuntu!!!")
+    overrides.colors = { background = "#26092b" }
+  end
+  window:set_config_overrides(overrides)
+end)
+
 if is_windows() then
   -- ----------------------------------------------------
   -- WSL
@@ -123,6 +136,15 @@ if is_windows() then
       -- The name of the distribution.  This identifies the WSL distribution.
       -- It must match a distribution from `wsl -l -v` output
       distribution = "AlmaLinux-8",
+      default_cwd = "~",
+    },
+    {
+      -- The name of this specific domain.  Must be unique amonst all types
+      -- of domain in the configuration file.
+      name = "WSL:Ubuntu",
+      -- The name of the distribution.  This identifies the WSL distribution.
+      -- It must match a distribution from `wsl -l -v` output
+      distribution = "Ubuntu",
       default_cwd = "~",
     },
   }
@@ -139,25 +161,25 @@ config.keys = {
     mods = "CTRL|SHIFT",
     action = wezterm.action.SplitHorizontal({ domain = "CurrentPaneDomain" }),
   },
-    {
-    key = 'h',
-    mods = 'CTRL|SHIFT',
-    action = act.ActivatePaneDirection 'Left',
+  {
+    key = "h",
+    mods = "CTRL|SHIFT",
+    action = act.ActivatePaneDirection("Left"),
+  },
+  -- {
+  --   key = "l",
+  --   mods = "CTRL|SHIFT",
+  --   action = act.ActivatePaneDirection("Right"),
+  -- },
+  {
+    key = "k",
+    mods = "CTRL|SHIFT",
+    action = act.ActivatePaneDirection("Up"),
   },
   {
-    key = 'l',
-    mods = 'CTRL|SHIFT',
-    action = act.ActivatePaneDirection 'Right',
-  },
-  {
-    key = 'k',
-    mods = 'CTRL|SHIFT',
-    action = act.ActivatePaneDirection 'Up',
-  },
-  {
-    key = 'j',
-    mods = 'CTRL|SHIFT',
-    action = act.ActivatePaneDirection 'Down',
+    key = "j",
+    mods = "CTRL|SHIFT",
+    action = act.ActivatePaneDirection("Down"),
   },
 }
 

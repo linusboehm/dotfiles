@@ -1,7 +1,11 @@
 promptToReturnFromSubprocess: false
 os:
-  editPreset: 'nvim'
+  editPreset: "nvim"
 git:
   paging:
     colorArg: always
     pager: delta --dark --paging=never
+keybinding:
+  universal:
+    quit: q
+    quit-alt1: <c-c>
