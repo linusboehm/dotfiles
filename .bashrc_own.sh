@@ -41,6 +41,7 @@ alias ...="cd ../.."
 alias ....="cd ../../.."
 alias .....="cd ../../../.."
 alias ......="cd ../../../../.."
+alias dnvim="cd $HOME/.config/nvim"
 # alias tshark='tshark --color'
 # alias gdb=/opt/rh/devtoolset-7/root/usr/bin/gdb
 
