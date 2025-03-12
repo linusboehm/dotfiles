@@ -11,9 +11,9 @@ alias ls='ls -G --color --group-directories-first'
 alias ll='ls -lF --color --group-directories-first'
 
 # User specific aliases and functions
-export PATH="$HOME/.local/nvim-linux64/bin:$PATH"
+export PATH="$HOME/.local/neovim/bin:$PATH"
 alias cmake="cmake3"
-alias vim="$HOME/.local/nvim-linux64/bin/nvim"
+alias vim="$HOME/.local/neovim/bin/nvim"
 alias vimdiff="nvim -d"
 
 function wttr() {
@@ -49,6 +49,7 @@ alias config='cd ~/.config/'
 alias prec='pre-commit run --files $(git diff --name-only)'
 alias precc='pre-commit run --files $(git diff --name-only HEAD^)'
 alias precpr='pre-commit run --files $(git diff --name-only master...)'
+alias ndb='vim -c DBUIToggle'
 
 # # fzf
 # alias pfzf='fzf --preview "bat --color=always {}"'
@@ -364,7 +365,9 @@ fi
 # source <(kubectl completion bash)
 # . "$HOME/.cargo/env"
 
-source /usr/share/bash-completion/completions/git
+if [ -f /usr/share/bash-completion/completions/git ]; then
+  source /usr/share/bash-completion/completions/git
+fi
 
 # history
 export PROMPT_COMMAND="history -a; $PROMPT_COMMAND"
