@@ -18,6 +18,7 @@ export PATH="$HOME/.local/neovim/bin:$PATH"
 alias cmake="cmake3"
 alias vim="$HOME/.local/neovim/bin/nvim"
 alias vimdiff="nvim -d"
+alias lastn='nvim -c "lua require(\"persistence\").load()"'
 
 function wttr() {
   if [ $# -eq 0 ]; then
