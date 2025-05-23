@@ -119,8 +119,8 @@ install_latest_from_gh "https://github.com/jesseduffield/lazygit" ".*Linux_${ARC
 install_latest_from_gh "https://github.com/sharkdp/bat" ".*${ARCH}-unknown-${OS}-gnu.tar.gz"
 install_latest_from_gh "https://github.com/sharkdp/fd" ".*-${ARCH}-unknown-${OS}-musl.tar.gz"
 install_latest_from_gh "https://github.com/dandavison/delta" ".*-${ARCH}-unknown-${OS}-musl.tar.gz"
-install_latest_from_gh "https://github.com/sxyazi/yazi" ".*-${ARCH}-unknown-${OS}-musl.zip"
 install_latest_from_gh "https://github.com/sxyazi/yazi" ".*-${ARCH}-unknown-${OS}-musl.zip" "ya"
+install_latest_from_gh "https://github.com/zellij-org/zellij" ".*-${ARCH}-unknown-${OS}-musl.tar.gz"
 
 # ########################
 #### BAT
@@ -231,6 +231,7 @@ else
   echo "cargo already installed."
 fi
 
+rm -rf ~/.config/bat/themes
 mkdir -p ~/.config/bat/themes
 ln -s ~/.local/share/nvim/lazy/tokyonight.nvim/extras/sublime ~/.config/bat/themes/tokyonight
 bat cache --build

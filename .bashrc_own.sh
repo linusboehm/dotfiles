@@ -276,6 +276,10 @@ function ta() {
   fi
 }
 
+function za() {
+  zellij attach --create main
+}
+
 function tn() {
   if [ "$1" = "" ]; then
     tmux new -s main
