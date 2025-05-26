@@ -23,6 +23,7 @@ fi
 function get_version_from_gh() {
   REPO=${1/\/github.com/\/api.github.com/repos}
   PATTERN=$2
+  RELEASE=$3
   if [ "$3" != "latest" ]; then
     RELEASE="tags/$3"
   fi
@@ -56,6 +57,9 @@ function get_version_from_gh() {
     tar -xz -f /tmp/setup_artifacts/downloaded_file -C /tmp/setup_artifacts
   elif [[ "$ASSETS" == *.zip ]]; then
     unzip /tmp/setup_artifacts/downloaded_file -d /tmp/setup_artifacts
+  elif [[ "$ASSETS" == *.wasm ]]; then
+    mv /tmp/setup_artifacts/downloaded_file /tmp/setup_artifacts/"$DESC".wasm
+    :
   else
     echo "Unsupported file type"
     exit 1
@@ -99,6 +103,24 @@ function install_version_from_gh() {
   fi
 }
 
+function install_zellij_plugin() {
+  REPO=$1
+  PATTERN=$2
+  ZELIJ_BIN=$HOME/.config/zellij
+  if [[ ! -e "$ZELIJ_BIN/$PATTERN" ]]; then
+    rm -rf /tmp/setup_artifacts
+    echo "Installing $PATTERN...$REPO"
+    get_latest_from_gh "$REPO" "$PATTERN"
+
+    BIN_PATH=$(find /tmp/setup_artifacts -name "$PATTERN")
+    echo "bin path: $BIN_PATH [$PATTERN]"
+    mv "$BIN_PATH" "$ZELIJ_BIN"
+    rm -rf /tmp/setup_artifacts
+  else
+    echo "$PATTERN already installed."
+  fi
+}
+
 # ##### GH
 # ##### CURRENTLY NOT NEEDED
 # if [[ ! -e "${BIN_DIR}/gh" ]]; then
@@ -121,6 +143,10 @@ install_latest_from_gh "https://github.com/sharkdp/fd" ".*-${ARCH}-unknown-${OS}
 install_latest_from_gh "https://github.com/dandavison/delta" ".*-${ARCH}-unknown-${OS}-musl.tar.gz"
 install_latest_from_gh "https://github.com/sxyazi/yazi" ".*-${ARCH}-unknown-${OS}-musl.zip" "ya"
 install_latest_from_gh "https://github.com/zellij-org/zellij" ".*-${ARCH}-unknown-${OS}-musl.tar.gz"
+install_latest_from_gh "https://github.com/ajeetdsouza/zoxide" ".*-${ARCH}-unknown-${OS}-musl.tar.gz"
+install_zellij_plugin "https://github.com/dj95/zjstatus" "zjstatus.wasm"
+install_zellij_plugin "https://github.com/cristiand391/zj-status-bar" "zj-status-bar.wasm"
+install_zellij_plugin "https://github.com/karimould/zellij-forgot" "zellij_forgot.wasm"
 
 # ########################
 #### BAT
