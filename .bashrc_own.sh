@@ -5,6 +5,8 @@ HISTFILESIZE=40000
 
 PATH=$PATH:$HOME/.local/bin
 
+export COLORTERM=truecolor # required by lazygit to display correct colors
+
 alias dotf='/usr/bin/git --git-dir=$HOME/repos/dotfiles/ --work-tree=$HOME'
 
 alias ls='ls -G --color --group-directories-first'
