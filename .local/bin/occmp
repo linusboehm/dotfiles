@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+# compare_strings.sh
+# Usage: ./compare_strings.sh string1 string2
+
+set -euo pipefail
+
+if [ "$#" -ne 2 ]; then
+  echo "Usage: $0 <string1> <string2>"
+  exit 1
+fi
+
+string1="$1"
+string2="$2"
+
+# List all files ripgrep would search (respects .gitignore, skips binaries), NUL-delimited
+# -l "" lists files; -0 outputs NULs so we can handle any filename safely
+while IFS= read -r -d '' f; do
+  # Count occurrences; `|| true` neutralizes the pipeline's nonzero exit due to no matches
+  count1=$(rg -o -- "$string1" "$f" | wc -l || true)
+  count2=$(rg -o -- "$string2" "$f" | wc -l || true)
+
+  if [ "$count1" -ne "$count2" ]; then
+    echo "$f: $string1=$count1, $string2=$count2"
+  fi
+done < <(rg -l -0 "")
