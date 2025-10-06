@@ -11,6 +11,7 @@ alias dotf='/usr/bin/git --git-dir=$HOME/repos/dotfiles/ --work-tree=$HOME'
 
 alias ls='ls -G --color --group-directories-first'
 alias ll='ls -lF --color --group-directories-first'
+alias mydu='du -xhd 1 | sort -hr'
 
 # User specific aliases and functions
 export PATH="$HOME/.local/neovim/bin:$PATH"
