@@ -1,25 +1,65 @@
+
 #!/usr/bin/env bash
 # compare_strings.sh
-# Usage: ./compare_strings.sh string1 string2
+# Usage: ./compare_strings.sh [-w] [-i] [-l] string1 string2
 
 set -euo pipefail
 
+# Default options
+whole_word=false
+ignore_case=false
+list_only=false
+
+# Parse command line options
+while getopts "wil" opt; do
+  case $opt in
+    w)
+      whole_word=true
+      ;;
+    i)
+      ignore_case=true
+      ;;
+    l)
+      list_only=true
+      ;;
+    \?)
+      echo "Invalid option: -$OPTARG" >&2
+      echo "Usage: $0 [-w] [-i] [-l] <string1> <string2>"
+      exit 1
+      ;;
+  esac
+done
+
+# Shift past the options
+shift $((OPTIND-1))
+
 if [ "$#" -ne 2 ]; then
-  echo "Usage: $0 <string1> <string2>"
+  echo "Usage: $0 [-w] [-i] [-l] <string1> <string2>"
   exit 1
 fi
 
 string1="$1"
 string2="$2"
 
-# List all files ripgrep would search (respects .gitignore, skips binaries), NUL-delimited
-# -l "" lists files; -0 outputs NULs so we can handle any filename safely
+# Build ripgrep flags
+rg_flags=""
+if [ "$whole_word" = true ]; then
+  rg_flags="$rg_flags -w"
+fi
+if [ "$ignore_case" = true ]; then
+  rg_flags="$rg_flags -i"
+fi
+
 while IFS= read -r -d '' f; do
-  # Count occurrences; `|| true` neutralizes the pipeline's nonzero exit due to no matches
-  count1=$(rg -o -- "$string1" "$f" | wc -l || true)
-  count2=$(rg -o -- "$string2" "$f" | wc -l || true)
+  count1=$(rg -o $rg_flags -- "$string1" "$f" | wc -l || true)
+  count2=$(rg -o $rg_flags -- "$string2" "$f" | wc -l || true)
 
   if [ "$count1" -ne "$count2" ]; then
-    echo "$f: $string1=$count1, $string2=$count2"
+    if [ "$list_only" = true ]; then
+      echo "$f"
+    else
+      echo "$f: $string1=$count1, $string2=$count2"
+    fi
   fi
 done < <(rg -l -0 "")
+

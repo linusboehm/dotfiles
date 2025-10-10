@@ -167,22 +167,29 @@ function reviewpr() {
   # echo "Running cmake..."
   # ./run_cmake.sh &>/dev/null || echo "ERROR RUNNING CMAKE"
   # echo "Done"
-  CMP_COMMIT=$(gfzf --)
+  #
+  # using FZF
+  # CMP_COMMIT=$(gfzf --)
+  # using bash
+  git fetch origin pull/$PR_ID/head:pr_head --force
+  git fetch origin master
+  # CMP_COMMIT=$(git merge-base pr_head FETCH_HEAD)
+
   printf "commit:\n$CMP_COMMIT\n"
   printf "${CYAN}Changed files:\n"
-  printf "  %s\n" "$(git diff --name-only "$CMP_COMMIT"...)"
+  printf "  %s\n" "$(git diff --name-only FETCH_HEAD...pr_head)"
   printf "$NC"
 
-  if confirm "run pre-commit hooks [pre-commit run --files \$(git diff --name-only $CMP_COMMIT...)]"; then
+  if confirm "run pre-commit hooks [pre-commit run --files \$(git diff --name-only FETCH_HEAD...pr_head)]"; then
     echo "runnign pre-commit hooks"
     # pre-commit run --show-diff-on-failure --files $(git diff --name-only $CMP_COMMIT...)
     # shellcheck disable=SC2086,SC2046
-    pre-commit run --files $(git diff --name-only "$CMP_COMMIT"...) # ignore
+    pre-commit run --files $(git diff --name-only FETCH_HEAD...pr_head) # ignore
   fi
-  if confirm "open diffview [vim -c \"DiffviewOpen ${CMP_COMMIT}... --imply-local\"]"; then
-    echo "running pre-commit hooks: [vim -c \"DiffviewOpen ${CMP_COMMIT}... --imply-local\"]"
+  if confirm "open diffview [vim -c \"DiffviewOpen FETCH_HEAD...pr_head --imply-local\"]"; then
+    echo "running pre-commit hooks: [vim -c \"DiffviewOpen FETCH_HEAD...pr_head --imply-local\"]"
     # imply-local: https://github.com/sindrets/diffview.nvim/blob/3dc498c9777fe79156f3d32dddd483b8b3dbd95f/doc/diffview.txt#L148
-    vim -c "DiffviewOpen $CMP_COMMIT... --imply-local"
+    vim -c "DiffviewOpen FETCH_HEAD...pr_head --imply-local"
   fi
   echo "DONE WITH REVIEW"
 }
