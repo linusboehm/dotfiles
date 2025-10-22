@@ -1,0 +1,28 @@
+CompileFlags:
+  # ignore -fconcepts compiler flag (not supported by clangd)
+  Remove: [-fconcepts]
+Diagnostics:
+  ClangTidy:
+    Add: []
+    Remove:
+      - bugprone-easily-swappable-parameters
+      - cppcoreguidelines-avoid-const-or-ref-data-members # avoids if data members are const/refs
+      - cppcoreguidelines-avoid-magic-numbers
+      - cppcoreguidelines-pro-type-reinterpret-cast
+      - cppcoreguidelines-special-member-functions # warns if some special member function are not declared, but other are
+      - hicpp-named-parameter # all function parameters have to have a name
+      - hicpp-signed-bitwise
+      - hicpp-special-member-functions # warns if some special member function are not declared, but other are
+      - hicpp-uppercase-literal-suffix
+      - modernize-pass-by-value # warns if const& is passed into constructor (instead of copy + move)
+      - modernize-use-trailing-return-type # warns if not using `auto func() -> return_type`
+      - readability-avoid-const-params-in-decls # warns for const parameters in (header) declarations
+      - readability-identifier-length # warns for const auto it = ... (it too short)
+      - readability-magic-numbers
+      - readability-named-parameter # all function parameters have to have a name
+  # suppress gcc stdlib errors
+  Suppress:
+    - incomplete_type_used_in_type_trait_expr
+    - ovl_no_viable_function_in_call
+    - static_assert_requirement_failed
+    - typecheck_arithmetic_incomplete_or_sizeless_type

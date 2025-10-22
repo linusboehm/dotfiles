@@ -1,0 +1,132 @@
+# .clang-tidy
+---
+# Start from a clean slate, then explicitly enable what we want.
+Checks: >
+  -*,
+  clang-analyzer-*,
+  bugprone-*,
+  performance-*,
+  modernize-*,
+  readability-*,
+  misc-*,
+  cppcoreguidelines-*,
+  cert-*,
+  portability-*,
+  hicpp-*
+
+# Promote high-signal findings to errors, keep style as warnings.
+WarningsAsErrors: >
+  clang-analyzer-*,
+  bugprone-*,
+  cert-*,
+  performance-*,
+  portability-*,
+
+# Only analyze files that match this regex (tweak for your tree).
+HeaderFilterRegex: '(^|/)(include|src|lib)/'
+
+# Make tidy respect your .clang-format if present.
+FormatStyle: file
+
+# If you use compile_commands.json (recommended), keep this true.
+UseColor: true
+
+# Extra args (uncomment and set your standard if your build system doesn't)
+# ExtraArgs: ['-std=c++20']
+# ExtraArgsBefore: []
+
+CheckOptions:
+  # Namespaces
+  - key: readability-identifier-naming.NamespaceCase
+    value: CamelCase
+
+  # Classes / Structs / Types
+  - key: readability-identifier-naming.ClassCase
+    value: CamelCase
+  - key: readability-identifier-naming.StructCase
+    value: CamelCase
+  - key: readability-identifier-naming.EnumCase
+    value: CamelCase
+  - key: readability-identifier-naming.TypeAliasCase
+    value: CamelCase
+
+  # Enum constants
+  - key: readability-identifier-naming.EnumConstantCase
+    value: UPPER_CASE
+
+  # Functions (free or member)
+  - key: readability-identifier-naming.FunctionCase
+    value: lower_case
+
+  # Member variables
+  - key: readability-identifier-naming.MemberCase
+    value: lower_case
+  - key: readability-identifier-naming.ConstantMemberCase
+    value: lower_case
+  - key: readability-identifier-naming.ConstantMemberSuffix
+    value: _
+  - key: readability-identifier-naming.PrivateMemberSuffix
+    value: _
+  - key: readability-identifier-naming.ProtectedMemberSuffix
+    value: _
+  - key: readability-identifier-naming.PublicMemberSuffix
+    value: _
+
+  # Variables (locals, parameters)
+  - key: readability-identifier-naming.VariableCase
+    value: lower_case
+  - key: readability-identifier-naming.ParameterCase
+    value: lower_case
+  - key: readability-identifier-naming.LocalVariableCase
+    value: lower_case
+  - key: readability-identifier-naming.GlobalVariableCase
+    value: lower_case
+
+  # Constants (default + per-scope overrides)
+  - key: readability-identifier-naming.ConstantCase
+    value: lower_case            # locals default to lower_case
+  - key: readability-identifier-naming.GlobalConstantCase
+    value: UPPER_CASE            # namespace-scope const / static const
+  - key: readability-identifier-naming.MemberConstantCase
+    value: lower_case            # class/struct constants; change to UPPER_CASE if you want those too
+
+  # (Optional) Make all constexpr variables UPPER_CASE:
+  - key: readability-identifier-naming.ConstexprVariableCase
+    value: UPPER_CASE
+
+  # Template parameters
+  - key: readability-identifier-naming.TemplateParameterCase
+    value: CamelCase
+
+  # Macros
+  - key: readability-identifier-naming.MacroDefinitionCase
+    value: UPPER_CASE
+
+  # --- Braces & readability ---
+  - key: readability-braces-around-statements.ShortStatementLines
+    value: '1'
+
+  # --- modernize hints (keep suggestions reasonable) ---
+  - key: modernize-loop-convert.MinConfidence
+    value: reasonable
+  - key: modernize-use-auto.MinTypeNameLength
+    value: '5'
+  - key: modernize-use-nullptr.NullMacros
+    value: 'NULL'
+
+  # --- performance tweaks ---
+  - key: performance-for-range-copy.WarnOnAllAutoCopies
+    value: 'true'
+
+  # --- misc / practicality ---
+  - key: misc-unused-parameters.Strict
+    value: 'true'
+
+  # --- cppcoreguidelines: make these useful but not overbearing ---
+  - key: cppcoreguidelines-non-private-member-variables-in-classes.IgnoreClassesWithAllMemberVariablesBeingPublic
+    value: 'true'
+
+  - key: misc-non-private-member-variables-in-classes.IgnoreClassesWithAllMemberVariablesBeingPublic
+    value: 'true'
+...
+
