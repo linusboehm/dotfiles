@@ -172,11 +172,15 @@ function reviewpr() {
   # CMP_COMMIT=$(gfzf --)
   # using bash
   git fetch origin pull/$PR_ID/head:pr_head --force
-  git fetch origin master
+  MAIN_BRANCH=$(git remote show origin | grep 'HEAD branch' | cut -d' ' -f5) # detect name of the main remote branch (main/master/...)
+  read -p "Enter branch name (default: $MAIN_BRANCH): " USER_BRANCH
+  USER_BRANCH=${USER_BRANCH:-$MAIN_BRANCH}
+  git fetch origin $USER_BRANCH
   # CMP_COMMIT=$(git merge-base pr_head FETCH_HEAD)
 
+  NR_CHANGED=$(git diff --name-only FETCH_HEAD...pr_head | wc -l)
   printf "commit:\n$CMP_COMMIT\n"
-  printf "${CYAN}Changed files:\n"
+  printf "${CYAN}Changed files ($NR_CHANGED):\n"
   printf "  %s\n" "$(git diff --name-only FETCH_HEAD...pr_head)"
   printf "$NC"
 
@@ -186,6 +190,10 @@ function reviewpr() {
     # shellcheck disable=SC2086,SC2046
     pre-commit run --files $(git diff --name-only FETCH_HEAD...pr_head) # ignore
   fi
+  if confirm "run cmake [./run_cmake -n -a -c]"; then
+    ./run_cmake.sh -n -a -c
+  fi
+
   if confirm "open diffview [vim -c \"DiffviewOpen FETCH_HEAD...pr_head --imply-local\"]"; then
     echo "running pre-commit hooks: [vim -c \"DiffviewOpen FETCH_HEAD...pr_head --imply-local\"]"
     # imply-local: https://github.com/sindrets/diffview.nvim/blob/3dc498c9777fe79156f3d32dddd483b8b3dbd95f/doc/diffview.txt#L148
