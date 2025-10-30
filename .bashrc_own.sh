@@ -152,16 +152,34 @@ function reviewpr() {
   PR_ID=$1
   PR_BRANCH=PR_REVIEW
   BARE_DIR=$(git rev-parse --git-common-dir)
-  # MAIN_BRANCH=$(git remote show origin | grep 'HEAD branch' | cut -d' ' -f5)
+
+  # Check if worktree exists
+  WORKTREE_EXISTS=false
+  if [ -d "$BARE_DIR/$PR_BRANCH" ]; then
+    WORKTREE_EXISTS=true
+    echo "Reusing existing $PR_BRANCH worktree"
+  else
+    echo "Creating new $PR_BRANCH worktree"
+  fi
 
   cd "$BARE_DIR"
-  echo "removing $PR_BRANCH worktree"
-  git worktree remove --force "$PR_BRANCH" 2>/dev/null || echo "$PR_BRANCH worktree doesn't exist"
-  echo "removing $PR_BRANCH branch"
-  git branch -D "$PR_BRANCH" 2>/dev/null || echo "$PR_BRANCH branch doesn't exist"
-  git fetch origin pull/"$PR_ID/head:$PR_BRANCH"
-  git worktree add "$PR_BRANCH" "$PR_BRANCH" || echo "$PR_BRANCH already exists"
-  cd "$PR_BRANCH"
+
+  echo "Fetching PR $PR_ID"
+  git fetch origin pull/"$PR_ID/head:temp_pr_$PR_ID" --force
+
+  # Create worktree only if it doesn't exist
+  if [ "$WORKTREE_EXISTS" = false ]; then
+    git worktree add "$PR_BRANCH" "temp_pr_$PR_ID" || echo "Failed to create $PR_BRANCH worktree"
+    # Rename the branch inside the worktree
+    cd "$PR_BRANCH"
+    git branch -m "temp_pr_$PR_ID" "$PR_BRANCH"
+  else
+    # For existing worktree, reset to the new PR state
+    cd "$PR_BRANCH"
+    git reset --hard "temp_pr_$PR_ID"
+    git branch -D "temp_pr_$PR_ID" 2>/dev/null || true
+  fi
+
   CYAN='\033[0;36m'
   NC='\033[0m' # No Color
   # echo "Running cmake..."
