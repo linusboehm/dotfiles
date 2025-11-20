@@ -1,10 +1,10 @@
 #!/bin/bash
 
-if type "$re" > /dev/null; then
-    files=$(grep -l -I "$@")
-else
-    echo "using re"
+if type "rg" > /dev/null; then
+    echo "using rg"
     files=$(rg -l "$@")
+else
+    files=$(grep -l -I "$@")
 fi
 
 for val in "$@"; do
