@@ -12,6 +12,7 @@ $username\
 $hostname\
 $directory\
 ${custom.git_info}\
+$status\
 [\\$ ](fg:#618bed)\
 """
 # $git_state\
@@ -124,6 +125,7 @@ format = '(\([$added]($added_style)[$deleted]($deleted_style)\))'
 # format = '[ \[$symbol$branch ]($style)'
 
 [git_status]
+disabled = true
 style = "fg:#8ae2bf"
 # format = '[$conflicted$deleted$renamed$modified$staged$ahead_behind\]]($style)'
 format = '[$conflicted$deleted$renamed$staged$ahead_behind\]]($style)'
@@ -131,6 +133,7 @@ conflicted = '󱐋'
 # modified = ''
 
 [rust]
+disabled = true
 # symbol = ""
 # style = "bg:#86BBD8"
 format = '[ ($version) ]($style)'
@@ -142,27 +145,13 @@ style = "fg:#33658A"
 format = '[\[$time\]]($style)'
 # ~/.config/starship.toml
 
-# [status]
-# style = 'bg:blue'
-# symbol = ''
-# not_found_symbol = ''
-# not_executable = ''
-# signal_symbol = ''
-# format = '[\[$symbol$common_meaning$signal_name$maybe_int\]]($style) '
-# map_symbol = true
-# disabled = false
-# time_format = "%R" # Hour:Minute Format
-# style = "fg:#33658A"
-# format = '[ $time\$ ]($style)'
-# # ~/.config/starship.toml
-#
-# # [status]
-# # style = 'bg:blue'
-# # symbol = ''
-# # not_found_symbol = ''
-# # not_executable = ''
-# # signal_symbol = ''
-# # format = '[\[$symbol$common_meaning$signal_name$maybe_int\]]($style) '
-# # map_symbol = true
-# # disabled = false
-# #
+[status]
+disabled = false
+style = "bg:#ed567d fg:#3B4252"
+# style = ""
+format = '[\[$symbol$status\]$common_meaning]($style)'
+symbol = "✗"
+not_executable_symbol = "✗"
+not_found_symbol = "✗"
+sigint_symbol = "✗"
+signal_symbol = "✗"

@@ -334,8 +334,6 @@ function tl() {
 }
 
 # Source global definitions
-export STARSHIP_LOG=error
-export STARSHIP_TIMEOUT=50  # ms
 if [[ "$OSTYPE" == "darwin"* ]]; then
   eval "$(starship init zsh)"
   source /usr/share/fzf/shell/key-bindings.zsh
@@ -344,7 +342,6 @@ else
   if [ -f /etc/bashrc ]; then
     . /etc/bashrc
   fi
-  eval "$(starship init bash)"
 fi
 
 if [[ "$OSTYPE" == "darwin"* ]]; then
@@ -387,29 +384,6 @@ fi
 
 # export CXX=/usr/local/bin/g++
 
-# ## clang format
-# function format {
-# 	curr=$(pwd)
-# 	x=$curr
-# 	while [ "$x" != "/" ]; do
-# 		if [[ $(basename $x) == "src" ]]; then
-# 			cd $x/..
-# 			for script in $(find . -name "clang-format-diff.py"); do
-# 				cd src
-# 				if [[ $1 == "--dry-run" ]]; then
-# 					git diff -U0 --no-color --relative HEAD^ | ../$script -p1
-# 				else
-# 					git diff -U0 --no-color --relative HEAD^ | ../$script -p1 -i
-# 				fi
-# 				break
-# 			done
-# 			break
-# 		fi
-# 		x=$(dirname "$x")
-# 	done
-# 	cd $curr
-# }
-
 # source <(kubectl completion bash)
 # . "$HOME/.cargo/env"
 
@@ -423,10 +397,6 @@ if [ -f /usr/share/bash-completion/completions/git ]; then
   complete -o bashdefault -o default -o nospace -F __lazy_git_complete git
 fi
 
-# history
-export PROMPT_COMMAND="history -a; $PROMPT_COMMAND"
-alias hget='history -c; history -r'
-
 # bat
 export BAT_THEME=tokyonight_night
 source ~/.fzf/fzf-git.sh/fzf-git.sh
@@ -439,7 +409,22 @@ function is_in_git_repo() {
 }
 
 
+# PROMPT_COMMAND, starship needs to be first!
+# history
+[[ "$PROMPT_COMMAND" != *"history -a"* ]] && export PROMPT_COMMAND="history -a; $PROMPT_COMMAND"
+alias hget='history -c; history -r'
+
 command -v zoxide >/dev/null 2>&1 && eval "$(zoxide init bash)"
+
+# Initialize starship last so it can properly capture exit codes
+# (must come after zoxide and any other PROMPT_COMMAND modifications)
+export STARSHIP_LOG=error
+export STARSHIP_TIMEOUT=50  # ms
+if [[ "$OSTYPE" != "darwin"* ]]; then
+  promptcmd=$PROMPT_COMMAND
+  eval "$(starship init bash)"
+  [[ "$promptcmd" != *"starship_precmd"* ]] && PROMPT_COMMAND="$PROMPT_COMMAND;$promptcmd"
+fi
 
 # https://github.com/mtzfactory/dotfiles/blob/c847d957aeb8b12555db28fce2ae5a4bf886bc5c/custom-git-commands/git-fzf-test#L75
 # function gfzf() {
@@ -508,3 +493,4 @@ command -v zoxide >/dev/null 2>&1 && eval "$(zoxide init bash)"
 #                 #         {} \
 #                 #         \nFZFEOF" \
 # };
+
