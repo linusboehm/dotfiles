@@ -1,5 +1,10 @@
 #!/bin/bash
 # .bashrc
+
+# only do this for interactive shell sessions
+case $- in *i*) ;; *) return ;; esac
+
+
 HISTSIZE=40000
 HISTFILESIZE=40000
 
@@ -329,6 +334,8 @@ function tl() {
 }
 
 # Source global definitions
+export STARSHIP_LOG=error
+export STARSHIP_TIMEOUT=50  # ms
 if [[ "$OSTYPE" == "darwin"* ]]; then
   eval "$(starship init zsh)"
   source /usr/share/fzf/shell/key-bindings.zsh
@@ -406,8 +413,14 @@ fi
 # source <(kubectl completion bash)
 # . "$HOME/.cargo/env"
 
-if [ -f /usr/share/bash-completion/completions/git ]; then
+__lazy_git_complete() {
+  # Load once, then re-register proper completion and re-run
   source /usr/share/bash-completion/completions/git
+  complete -o bashdefault -o default -o nospace -F __git_wrap__git_main git
+  __git_wrap__git_main "$@"
+}
+if [ -f /usr/share/bash-completion/completions/git ]; then
+  complete -o bashdefault -o default -o nospace -F __lazy_git_complete git
 fi
 
 # history

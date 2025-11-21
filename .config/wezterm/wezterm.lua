@@ -95,8 +95,8 @@ config.mouse_bindings = {
   },
 }
 
-wezterm.on("format-tab-title", function(tab, tabs, panes, config, hover, max_width)
-  local hostname = wezterm.hostname()
+wezterm.on("format-tab-title", function(tab, tabs, panes, conf, hover, max_width)
+  -- local hostname = wezterm.hostname()
   -- wezterm.log_warn(string.format("%s, %s", hostname, color_scheme["brights"][2]))
   local title = tab.active_pane.title
 
@@ -182,5 +182,7 @@ config.keys = {
     action = act.ActivatePaneDirection("Down"),
   },
 }
+
+config.window_padding = { left = 0, right = 0, top = 0, bottom = 0 }
 
 return config
