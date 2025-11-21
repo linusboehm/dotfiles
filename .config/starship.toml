@@ -11,14 +11,12 @@ $time\
 $username\
 $hostname\
 $directory\
-${custom.repo_name}\
-${custom.git_branch}\
-${custom.bare_repo}\
-$git_state\
-$docker_context\
-$python\
+${custom.git_info}\
 [\\$ ](fg:#618bed)\
 """
+# $git_state\
+# $python\
+# $docker_context\
 # $git_branch\
 # $c\
 # $rust\
@@ -47,51 +45,59 @@ format = "[$path]($style)"
 truncation_length = 3
 truncation_symbol = "…/"
 
-[custom.bare_repo]
-command = "echo BARE"
-# style = "fg:#ed567d"
-style = "fg:#8ae2bf"
-when = ''' $(git rev-parse --is-bare-repository) 2>/dev/null '''
-format = '[\[$output\]]($style)'
-description = "Displays the current repository name"
+[custom.git_info]
+command = '''
+    git rev-parse --git-dir >/dev/null 2>&1 || exit
 
-[custom.repo_name]
-command = "echo \"$(basename $(dirname $(git rev-parse --show-toplevel)))\""
-# style = "fg:#b2e28a" # dir color
-style = "fg:#8ae2bf" # git color
-when = ''' test "$(realpath $(git rev-parse --git-dir))" != "$(realpath $(git rev-parse --git-common-dir))" '''
-# format = '[$output/]($style)' # root dir
-format = '[\[$output\]]($style)' # in brackets
-description = "Displays the current repository name"
+    is_bare=$(git rev-parse --is-bare-repository 2>/dev/null)
+    if [ "$is_bare" = "true" ]; then
+        echo "[BARE]"
+        exit
+    fi
+
+    set -- $(git rev-parse --is-inside-work-tree --git-dir --git-common-dir --show-toplevel --abbrev-ref HEAD 2>/dev/null)
+    [ $# -eq 5 ] || exit
+
+    if [ "$1" = "true" ]; then
+        if [ "$(realpath "$2")" != "$(realpath "$3")" ]; then
+            echo "[$(basename $(dirname "$4"))][$5]"
+        else
+            echo "[$5]"
+        fi
+    fi
+'''
+style = "fg:#8ae2bf"
+when = true
+format = '[$output]($style)'
+description = "Combined git info: repo name, branch, or bare status"
 
 [c]
 symbol = " "
+disabled = true
 # style = "bg:#86BBD8"
 format = '[ ($version) ]($style)'
 
 [docker_context]
+disabled = true
 symbol = " "
 # style = "bg:#06969A"
 format = '[ $context ]($style) $path'
 
 [python]
+disabled = true
 symbol = ""
 style = "fg:#86BBD8"
 format = '[(\($symbol$virtualenv\))]($style)'
 
-[custom.git_branch]
-command = "git rev-parse --abbrev-ref HEAD "
-style = "fg:#8ae2bf"
-when = ''' $(git rev-parse --is-inside-work-tree) 2>/dev/null '''
-format = '[\[$output\]]($style)'
-
 [git_branch]
+disabled = true
 symbol = ""
 style = "fg:#8ae2bf"
 format = '[\[$branch\]]($style)'
 # format = '[ \[$symbol$branch ]($style)'
 
 [git_state]
+disabled = true
 style = "fg:#8ae2bf"
 rebase ='REBASE'
 merge ='MERGE'
@@ -104,8 +110,9 @@ format = '[ \[$state( $progress_current/$progress_total)]($style)'
 # format = '[ \[$symbol$branch ]($style)'
 
 [git_metrics]
+disabled = true
 # only_nonzero_diffs = false
-disabled = false
+# disabled = false
 # deleted_style = 'bold #ad143f'
 deleted_style = '#e28a8d'
 # added_style = 'bold #359a3d'

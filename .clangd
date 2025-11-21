@@ -20,6 +20,7 @@ Diagnostics:
       - readability-identifier-length # warns for const auto it = ... (it too short)
       - readability-magic-numbers
       - readability-named-parameter # all function parameters have to have a name
+      - performance-avoid-endl
   # suppress gcc stdlib errors
   Suppress:
     - incomplete_type_used_in_type_trait_expr
