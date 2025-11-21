@@ -21,7 +21,7 @@ ${custom.git_info}\
 # $c\
 # $rust\
 # [ ](fg:#33658A)\
-command_timeout = 5000
+command_timeout = 70
 add_newline = false
 
 # You can also replace your username with a neat symbol like  to save some space

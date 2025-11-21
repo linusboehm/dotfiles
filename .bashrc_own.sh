@@ -425,7 +425,7 @@ function is_in_git_repo() {
 }
 
 
-eval "$(zoxide init bash)"
+command -v zoxide >/dev/null 2>&1 && eval "$(zoxide init bash)"
 
 # https://github.com/mtzfactory/dotfiles/blob/c847d957aeb8b12555db28fce2ae5a4bf886bc5c/custom-git-commands/git-fzf-test#L75
 # function gfzf() {
