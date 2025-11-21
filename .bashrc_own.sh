@@ -424,6 +424,8 @@ if [[ "$OSTYPE" != "darwin"* ]]; then
   promptcmd=$PROMPT_COMMAND
   eval "$(starship init bash)"
   [[ "$promptcmd" != *"starship_precmd"* ]] && PROMPT_COMMAND="$PROMPT_COMMAND;$promptcmd"
+  # remove the header formatting (messeas up the tabs in tmux)
+  PROMPT_COMMAND="${PROMPT_COMMAND%; printf*}"
 fi
 
 # https://github.com/mtzfactory/dotfiles/blob/c847d957aeb8b12555db28fce2ae5a4bf886bc5c/custom-git-commands/git-fzf-test#L75
