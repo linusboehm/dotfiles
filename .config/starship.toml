@@ -12,11 +12,11 @@ $username\
 $hostname\
 $directory\
 ${custom.git_info}\
+$python\
 $status\
 [\\$ ](fg:#618bed)\
 """
 # $git_state\
-# $python\
 # $docker_context\
 # $git_branch\
 # $c\
@@ -85,7 +85,7 @@ symbol = " "
 format = '[ $context ]($style) $path'
 
 [python]
-disabled = true
+disabled = false
 symbol = ""
 style = "fg:#86BBD8"
 format = '[(\($symbol$virtualenv\))]($style)'
