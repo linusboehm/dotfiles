@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# ===== user config =====
+NTFY_URL="${NTFY_URL:-https://ntfy.sh}"       # or your self-hosted ntfy base URL
+NTFY_TOPIC="${NTFY_TOPIC:-limbo_msging_done}" # <-- set your topic
+NTFY_TOKEN="${NTFY_TOKEN:-}"                  # optional: token if your server requires it
+NTFY_PRIORITY="${NTFY_PRIORITY:-urgent}"           # 1..5
+NTFY_TAGS="${NTFY_TAGS:-robot,bell}"          # comma-separated tags
+# =======================
+
+payload="$(cat)"
+echo $payload > $HOME/bla.json
+
+# Core fields from payload (many events won't have all of these; that's OK)
+event="$(printf '%s' "$payload" | jq -r '.hook_event_name // "UnknownEvent"')"
+msg="$(printf '%s' "$payload" | jq -r '.message // empty')"
+
+
+repo_name=$(basename "$(dirname "$(git rev-parse --show-toplevel)")")
+branch_name=$(git rev-parse --abbrev-ref HEAD)
+worktree_label="${repo_name}:${branch_name}"
+
+# --- build final message (for safety if .message is empty) ---
+if [ -z "$msg" ] || [ "$msg" = "null" ]; then
+  msg="Claude notification (${event})"
+fi
+
+# --- send to ntfy (silent success) ---
+curl -fsSL \
+  ${NTFY_TOKEN:+-u ":$NTFY_TOKEN"} \
+  -H "X-Title: Claude Code — $worktree_label" \
+  -H "X-Priority: ${NTFY_PRIORITY}" \
+  -H "Tags: ${NTFY_TAGS}" \
+  -d "$msg" \
+  "${NTFY_URL%/}/${NTFY_TOPIC}" \
+  > /dev/null
