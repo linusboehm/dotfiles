@@ -1,7 +1,7 @@
 line-length = 100
-
+indent-width = 2
 [format]
-# quote-style = "single"
-# indent-style = "tab"
-docstring-code-format = true
+docstring-code-format = false
+indent-style = "space"
+quote-style = "single"
 

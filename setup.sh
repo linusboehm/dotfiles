@@ -39,9 +39,24 @@ function get_version_from_gh() {
   # echo "$URL: $LATEST"
   # curl -Ls "$URL" | tar -xz -C "/tmp/setup_artifacts"
 
-  ASSETS=$(curl -s "$REPO/releases/$RELEASE" |
-    jq -r ".assets[] | select(.name | test(\"$PATTERN\")) | select(.name | test(\"sha256\") | not) | .browser_download_url")
+  echo "Fetching release assets from $REPO release $RELEASE"
+  ASSETS=$(
+  curl -sS -H 'User-Agent: curl' "$REPO/releases/${RELEASE}" \
+  | jq -r --arg re "$PATTERN" '
+      .assets[]
+      | select(.name | test($re))
+      | select(.name | test("sha256"; "i") | not)
+      | .browser_download_url
+    '
+)
+  # ASSETS=$(curl -s "$REPO/releases/$RELEASE" |
+  #   jq -r ".assets[] | select(.name | test(\"$PATTERN\")) | select(.name | test(\"sha256\") | not) | .browser_download_url")
+  echo "Assets found: $ASSETS"
+  echo "$ASSETS" | wc -l
   MATCHES=$(echo "$ASSETS" | wc -l)
+
+  echo "Found $MATCHES matching assets for pattern '$PATTERN' [$ASSETS]"
+ 
   if [[ $MATCHES -ne 1 ]]; then
     echo "expected 1 match for $REPO, found $MATCHES ($ASSETS)... Aborting"
     exit 1
@@ -50,6 +65,7 @@ function get_version_from_gh() {
   #   tar -xz -C "/tmp/setup_artifacts"
 
   # Download the file
+  echo "Downloading asset from $ASSETS"
   curl -Ls "$ASSETS" -o /tmp/setup_artifacts/downloaded_file
 
   # Determine the file type and extract accordingly
@@ -64,6 +80,8 @@ function get_version_from_gh() {
     echo "Unsupported file type"
     exit 1
   fi
+  echo "Extracted files:"
+  ls /tmp/setup_artifacts
 
   # gh release download -R "$REPO" -D /tmp/setup_artifacts -p "$PATTERN" --clobber
   # rm -rf /tmp/setup_artifacts/*sha256*
@@ -144,6 +162,7 @@ install_latest_from_gh "https://github.com/dandavison/delta" ".*-${ARCH}-unknown
 install_latest_from_gh "https://github.com/sxyazi/yazi" ".*-${ARCH}-unknown-${OS}-musl.zip" "ya"
 install_latest_from_gh "https://github.com/zellij-org/zellij" ".*-${ARCH}-unknown-${OS}-musl.tar.gz"
 install_latest_from_gh "https://github.com/ajeetdsouza/zoxide" ".*-${ARCH}-unknown-${OS}-musl.tar.gz"
+install_latest_from_gh "https://github.com/cli/cli" "gh_2.83.1_linux_amd64.tar.gz" "gh"
 install_zellij_plugin "https://github.com/dj95/zjstatus" "zjstatus.wasm"
 install_zellij_plugin "https://github.com/cristiand391/zj-status-bar" "zj-status-bar.wasm"
 install_zellij_plugin "https://github.com/karimould/zellij-forgot" "zellij_forgot.wasm"
@@ -175,14 +194,18 @@ else
   echo "nvm already installed."
 fi
 
-if [[ ! -d ".local/nvim-linux64" ]]; then
-  get_latest_from_gh "https://github.com/neovim/neovim" ".*nvim-${OS}64.tar.gz$"
-  # get_version_from_gh "https://github.com/neovim/neovim" ".*nvim-${OS}64.tar.gz$" "v0.9.5"
-  mv /tmp/setup_artifacts/nvim-linux64 "$HOME/.local/"
-  rm -rf /tmp/setup_artifacts
-else
-  echo "nvim already installed."
-fi
+# if [[ ! -d ".local/nvim-linux64" ]]; then
+#   get_latest_from_gh "https://github.com/neovim/neovim" ".*nvim-${OS}64.tar.gz$"
+#   # get_version_from_gh "https://github.com/neovim/neovim" ".*nvim-${OS}64.tar.gz$" "v0.9.5"
+#   mv /tmp/setup_artifacts/nvim-linux64 "$HOME/.local/"
+#   rm -rf /tmp/setup_artifacts
+# else
+#   echo "nvim already installed."
+# fi
+# cd ~/repos/neovim/
+# git checkout v0.12.5
+# make CMAKE_EXTRA_FLAGS="-DCMAKE_INSTALL_PREFIX=$HOME/.local/neovim" CMAKE_BUILD_TYPE=Release
+# make install
 
 ## CONFIG
 if [[ ! -d "$HOME/.config/nvim" ]]; then
