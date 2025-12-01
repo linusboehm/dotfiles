@@ -137,7 +137,7 @@ function renamebranch() {
 function confirm() {
   read -p "$1 [Y/n]?" -r
   echo # (optional) move to a new line
-  [[ $REPLY =~ ^[Yy]$ ]]
+  [[ $REPLY =~ ^[Yy]$|^$ ]]
   return
 }
 
@@ -150,11 +150,95 @@ function diffv() {
   vim -c "DiffviewOpen $1..$2 --imply-local"
 }
 
+# function reviewpr() {
+#   if [ "$1" = "" ]; then
+#     echo "No argument supplied. Please provide PR ID"
+#     return
+#   fi
+#   PR_ID=$1
+#   PR_BRANCH=PR_REVIEW
+#   BARE_DIR=$(git rev-parse --git-common-dir)
+#
+#   # Check if worktree exists
+#   WORKTREE_EXISTS=false
+#   if [ -d "$BARE_DIR/$PR_BRANCH" ]; then
+#     WORKTREE_EXISTS=true
+#     echo "Reusing existing $PR_BRANCH worktree"
+#   else
+#     echo "Creating new $PR_BRANCH worktree"
+#   fi
+#
+#   cd "$BARE_DIR"
+#
+#   echo "Fetching PR $PR_ID"
+#   git fetch origin pull/"$PR_ID/head:temp_pr_$PR_ID" --force
+#
+#   # Create worktree only if it doesn't exist
+#   if [ "$WORKTREE_EXISTS" = false ]; then
+#     git worktree add "$PR_BRANCH" "temp_pr_$PR_ID" || echo "Failed to create $PR_BRANCH worktree"
+#     # Rename the branch inside the worktree
+#     cd "$PR_BRANCH"
+#     git branch -m "temp_pr_$PR_ID" "$PR_BRANCH"
+#   else
+#     # For existing worktree, reset to the new PR state
+#     cd "$PR_BRANCH"
+#     git reset --hard "temp_pr_$PR_ID"
+#     git branch -D "temp_pr_$PR_ID" 2>/dev/null || true
+#   fi
+#
+#   CYAN='\033[0;36m'
+#   NC='\033[0m' # No Color
+#   # echo "Running cmake..."
+#   # ./run_cmake.sh &>/dev/null || echo "ERROR RUNNING CMAKE"
+#   # echo "Done"
+#   #
+#   # using FZF
+#   # CMP_COMMIT=$(gfzf --)
+#   # using bash
+#   git fetch origin pull/$PR_ID/head:pr_head --force
+#   MAIN_BRANCH=$(git remote show origin | grep 'HEAD branch' | cut -d' ' -f5) # detect name of the main remote branch (main/master/...)
+#   read -p "Enter branch name (default: $MAIN_BRANCH): " USER_BRANCH
+#   USER_BRANCH=${USER_BRANCH:-$MAIN_BRANCH}
+#   git fetch origin $USER_BRANCH
+#   # CMP_COMMIT=$(git merge-base pr_head FETCH_HEAD)
+#
+#   NR_CHANGED=$(git diff --name-only FETCH_HEAD...pr_head | wc -l)
+#   printf "commit:\n$CMP_COMMIT\n"
+#   printf "${CYAN}Changed files ($NR_CHANGED):\n"
+#   printf "  %s\n" "$(git diff --name-only FETCH_HEAD...pr_head)"
+#   printf "$NC"
+#
+#   if confirm "run pre-commit hooks [pre-commit run --files \$(git diff --name-only FETCH_HEAD...pr_head)]"; then
+#     echo "runnign pre-commit hooks"
+#     # pre-commit run --show-diff-on-failure --files $(git diff --name-only $CMP_COMMIT...)
+#     # shellcheck disable=SC2086,SC2046
+#     pre-commit run --files $(git diff --name-only FETCH_HEAD...pr_head) # ignore
+#   fi
+#   if confirm "run cmake [./run_cmake -n -a -c]"; then
+#     ./run_cmake.sh -n -a -c
+#   fi
+#
+#   if confirm "open diffview [vim -c \"DiffviewOpen FETCH_HEAD...pr_head --imply-local\"]"; then
+#     echo "running pre-commit hooks: [vim -c \"DiffviewOpen FETCH_HEAD...pr_head --imply-local\"]"
+#     # imply-local: https://github.com/sindrets/diffview.nvim/blob/3dc498c9777fe79156f3d32dddd483b8b3dbd95f/doc/diffview.txt#L148
+#     vim -c "DiffviewOpen FETCH_HEAD...pr_head --imply-local"
+#   fi
+#   echo "DONE WITH REVIEW"
+# }
+
+
+ 
 function reviewpr() {
   if [ "$1" = "" ]; then
     echo "No argument supplied. Please provide PR ID"
     return
   fi
+
+  if ! command -v gh &> /dev/null; then
+    echo "Error: gh CLI is not installed"
+    return 1
+  fi
+
   PR_ID=$1
   PR_BRANCH=PR_REVIEW
   BARE_DIR=$(git rev-parse --git-common-dir)
@@ -171,7 +255,14 @@ function reviewpr() {
   cd "$BARE_DIR"
 
   echo "Fetching PR $PR_ID"
-  git fetch origin pull/"$PR_ID/head:temp_pr_$PR_ID" --force
+  # Get base and head SHAs from gh
+  PR_DATA=$(gh pr view "$PR_ID" --json baseRefOid,headRefOid)
+  BASE_SHA=$(echo "$PR_DATA" | jq -r '.baseRefOid')
+  HEAD_SHA=$(echo "$PR_DATA" | jq -r '.headRefOid')
+
+  # Fetch the head commit and create temp branch
+  git fetch origin "$HEAD_SHA" --force
+  git branch -f "temp_pr_$PR_ID" "$HEAD_SHA"
 
   # Create worktree only if it doesn't exist
   if [ "$WORKTREE_EXISTS" = false ]; then
@@ -187,41 +278,28 @@ function reviewpr() {
   fi
 
   CYAN='\033[0;36m'
-  NC='\033[0m' # No Color
-  # echo "Running cmake..."
-  # ./run_cmake.sh &>/dev/null || echo "ERROR RUNNING CMAKE"
-  # echo "Done"
-  #
-  # using FZF
-  # CMP_COMMIT=$(gfzf --)
-  # using bash
-  git fetch origin pull/$PR_ID/head:pr_head --force
-  MAIN_BRANCH=$(git remote show origin | grep 'HEAD branch' | cut -d' ' -f5) # detect name of the main remote branch (main/master/...)
-  read -p "Enter branch name (default: $MAIN_BRANCH): " USER_BRANCH
-  USER_BRANCH=${USER_BRANCH:-$MAIN_BRANCH}
-  git fetch origin $USER_BRANCH
-  # CMP_COMMIT=$(git merge-base pr_head FETCH_HEAD)
+  NC='\033[0m'
 
-  NR_CHANGED=$(git diff --name-only FETCH_HEAD...pr_head | wc -l)
-  printf "commit:\n$CMP_COMMIT\n"
+  # Now create the comparison branches from within the worktree
+  git fetch origin "$HEAD_SHA" --force
+  git branch -f pr_head "$HEAD_SHA"
+  git fetch origin "$BASE_SHA" --force
+  git branch -f pr_base "$BASE_SHA"
+
+  NR_CHANGED=$(git diff --name-only pr_base...pr_head | wc -l)
   printf "${CYAN}Changed files ($NR_CHANGED):\n"
-  printf "  %s\n" "$(git diff --name-only FETCH_HEAD...pr_head)"
+  printf "  %s\n" "$(git diff --name-only pr_base...pr_head)"
   printf "$NC"
 
-  if confirm "run pre-commit hooks [pre-commit run --files \$(git diff --name-only FETCH_HEAD...pr_head)]"; then
-    echo "runnign pre-commit hooks"
-    # pre-commit run --show-diff-on-failure --files $(git diff --name-only $CMP_COMMIT...)
-    # shellcheck disable=SC2086,SC2046
-    pre-commit run --files $(git diff --name-only FETCH_HEAD...pr_head) # ignore
+  if confirm "run pre-commit hooks [pre-commit run --files \$(git diff --name-only pr_base...pr_head)]"; then
+    pre-commit run --files $(git diff --name-only pr_base...pr_head)
   fi
   if confirm "run cmake [./run_cmake -n -a -c]"; then
     ./run_cmake.sh -n -a -c
   fi
 
-  if confirm "open diffview [vim -c \"DiffviewOpen FETCH_HEAD...pr_head --imply-local\"]"; then
-    echo "running pre-commit hooks: [vim -c \"DiffviewOpen FETCH_HEAD...pr_head --imply-local\"]"
-    # imply-local: https://github.com/sindrets/diffview.nvim/blob/3dc498c9777fe79156f3d32dddd483b8b3dbd95f/doc/diffview.txt#L148
-    vim -c "DiffviewOpen FETCH_HEAD...pr_head --imply-local"
+  if confirm "open diffview [vim -c \"DiffviewOpen pr_base...pr_head --imply-local\"]"; then
+    vim -c "DiffviewOpen pr_base...pr_head --imply-local"
   fi
   echo "DONE WITH REVIEW"
 }
