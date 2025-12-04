@@ -277,6 +277,8 @@ function reviewpr() {
     git branch -D "temp_pr_$PR_ID" 2>/dev/null || true
   fi
 
+  echo $PR_ID > PR_NUMBER
+
   CYAN='\033[0;36m'
   NC='\033[0m'
 
